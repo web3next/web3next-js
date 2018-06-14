@@ -1,28 +1,15 @@
 {
   "name": "@w3n/blockchain",
-  "version": "3.1.0",
   "description": "A module to store and interact with blocks",
   "main": "index.js",
   "scripts": {
-    "coverage": "nyc npm run test && nyc report --reporter=text-lcov > .nyc_output/lcov.info",
-    "coveralls": "npm run coverage && coveralls <.nyc_output/lcov.info",
-    "lint": "standard",
     "test": "tape ./test/index.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ethereumjs/ethereumjs-blockchain.git"
-  },
+
   "keywords": [
     "ethereum",
     "blockchain"
   ],
-  "author": "mjbecze <mjbecze@gmail.com>",
-  "license": "MPL-2.0",
-  "bugs": {
-    "url": "https://github.com/ethereumjs/ethereumjs-blockchain/issues"
-  },
-  "homepage": "https://github.com/ethereumjs/ethereumjs-blockchain#readme",
   "dependencies": {
     "async": "^2.1.2",
     "ethashjs": "~0.0.7",
@@ -36,9 +23,6 @@
     "lru-cache": "^4.1.2"
   },
   "devDependencies": {
-    "coveralls": "^3.0.0",
-    "nyc": "^11.8.0",
-    "standard": "^11.0.1",
-    "tape": "^4.2.1"
+    "nyc": "^11.8.0"
   }
 }

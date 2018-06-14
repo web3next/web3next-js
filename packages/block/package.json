@@ -1,12 +1,8 @@
 {
   "name": "@w3n/block",
-  "version": "1.7.1",
   "description": "Provides Block serialization and help functions",
   "main": "index.js",
   "scripts": {
-    "coverage": "istanbul cover ./tests/index.js",
-    "coveralls": "npm run coverage && coveralls < coverage/lcov.info",
-    "lint": "standard",
     "test": "npm run test:node && npm run test:browser",
     "test:browser": "karma start karma.conf.js",
     "test:node": "node tests/index.js",
@@ -37,8 +33,6 @@
     "karma-detect-browsers": "^2.2.5",
     "karma-env-preprocessor": "^0.1.1",
     "karma-firefox-launcher": "^1.1.0",
-    "karma-tap": "^4.0.0",
-    "standard": "^8.4.0",
-    "tape": "^4.2.0"
+    "karma-tap": "^4.0.0"
   }
 }
