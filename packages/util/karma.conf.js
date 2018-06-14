@@ -1,28 +1,28 @@
 module.exports = function (config) {
   config.set({
-    frameworks: ['browserify', 'detectBrowsers', 'mocha'],
+    frameworks: ["browserify", "detectBrowsers", "mocha"],
     files: [
-      'test/*.js'
+      "test/*.js"
     ],
     preprocessors: {
-      'test/*.js': ['browserify', 'env']
+      "test/*.js": ["browserify", "env"]
     },
     singleRun: true,
     plugins: [
-      'karma-browserify',
-      'karma-chrome-launcher',
-      'karma-env-preprocessor',
-      'karma-firefox-launcher',
-      'karma-detect-browsers',
-      'karma-mocha'
+      "karma-browserify",
+      "karma-chrome-launcher",
+      "karma-env-preprocessor",
+      "karma-firefox-launcher",
+      "karma-detect-browsers",
+      "karma-mocha"
     ],
     browserify: {
-      'transform': [
+      transform: [
         [
-          'babelify',
+          "babelify",
           {
-            'presets': [
-              'env'
+            presets: [
+              "env"
             ]
           }
         ]
@@ -30,22 +30,23 @@ module.exports = function (config) {
       debug: true
     },
     envPreprocessor: [
-      'RANDOM_TESTS_REPEAT',
-      'TRAVIS'
+      "RANDOM_TESTS_REPEAT",
+      "TRAVIS"
     ],
     detectBrowsers: {
       enabled: true,
       usePhantomJS: false,
-      postDetection: function (availableBrowser) {
+      postDetection (availableBrowser) {
         if (process.env.TRAVIS) {
-          return ['Firefox']
+          return ["Firefox"];
         }
 
-        var browsers = ['Chrome', 'Firefox']
-        return browsers.filter(function (browser) {
-          return availableBrowser.indexOf(browser) !== -1
-        })
+        const browsers = ["Chrome", "Firefox"];
+
+        return browsers.filter((browser) => {
+          return availableBrowser.indexOf(browser) !== -1;
+        });
       }
     }
-  })
-}
+  });
+};

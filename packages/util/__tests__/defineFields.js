@@ -1,124 +1,138 @@
-var assert = require('assert')
-var ethUtil = require('../dist/index.js')
+import ethUtil from "..";
 
-describe('define', function () {
-  const fields = [{
-    name: 'aword',
-    alias: 'blah',
-    word: true,
-    default: Buffer.allocUnsafe(0)
-  }, {
-    name: 'empty',
-    allowZero: true,
-    length: 20,
-    default: Buffer.allocUnsafe(0)
-  }, {
-    name: 'cannotBeZero',
-    allowZero: false,
-    default: Buffer.from([0])
-  }, {
-    name: 'value',
-    default: Buffer.allocUnsafe(0)
-  }, {
-    name: 'r',
-    length: 32,
-    allowLess: true,
-    default: ethUtil.zeros(32)
-  }]
+const fields = Object.freeze([{
+  name: "aword",
+  alias: "blah",
+  word: true,
+  default: Buffer.allocUnsafe(0)
+}, {
+  name: "empty",
+  allowZero: true,
+  length: 20,
+  default: Buffer.allocUnsafe(0)
+}, {
+  name: "cannotBeZero",
+  allowZero: false,
+  default: Buffer.from([0])
+}, {
+  name: "value",
+  default: Buffer.allocUnsafe(0)
+}, {
+  name: "r",
+  length: 32,
+  allowLess: true,
+  default: ethUtil.zeros(32)
+}]);
 
-  it('should trim zeros', function () {
-    var someOb = {}
-    ethUtil.defineProperties(someOb, fields)
+describe("define", () => {
+  test("should trim zeros", () => {
+    const someOb = {};
+
+    ethUtil.defineProperties(someOb, fields);
+
     // Define Properties
-    someOb.r = '0x00004'
-    assert.equal(someOb.r.toString('hex'), '04')
+    someOb.r = "0x00004";
+    expect(someOb.r.toString("hex")).toBe("04");
 
-    someOb.r = Buffer.from([0, 0, 0, 0, 4])
-    assert.equal(someOb.r.toString('hex'), '04')
-  })
+    someOb.r = Buffer.from([0, 0, 0, 0, 4]);
+    expect(someOb.r.toString("hex")).toBe("04");
+  });
 
-  it('shouldn\'t allow wrong size for exact size requirements', function () {
-    var someOb = {}
-    ethUtil.defineProperties(someOb, fields)
+  test("shouldn't allow wrong size for exact size requirements", () => {
+    const someOb = {};
 
-    assert.throws(function () {
+    ethUtil.defineProperties(someOb, fields);
+
+    expect(() => {
       const tmp = [{
-        name: 'mustBeExactSize',
+        name: "mustBeExactSize",
         allowZero: false,
         length: 20,
         default: Buffer.from([1, 2, 3, 4])
-      }]
-      ethUtil.defineProperties(someOb, tmp)
-    })
-  })
+      }];
 
-  it('it should accept rlp encoded intial data', function () {
-    var someOb = {}
-    var data = {
-      aword: 'test',
-      cannotBeZero: 'not zero',
-      value: 'a value',
-      r: 'rrr'
-    }
+      ethUtil.defineProperties(someOb, tmp);
+    }).toThrow();
+  });
 
-    var expected = {
-      aword: '0x74657374',
-      empty: '0x',
-      cannotBeZero: '0x6e6f74207a65726f',
-      value: '0x612076616c7565',
-      r: '0x727272'
-    }
+  test("it should accept rlp encoded intial data", () => {
+    const someOb = {};
+    const data = {
+      aword: "test",
+      cannotBeZero: "not zero",
+      value: "a value",
+      r: "rrr"
+    };
 
-    var expectedArray = [
-      '0x74657374', '0x', '0x6e6f74207a65726f', '0x612076616c7565', '0x727272'
-    ]
+    const expected = {
+      aword: "0x74657374",
+      empty: "0x",
+      cannotBeZero: "0x6e6f74207a65726f",
+      value: "0x612076616c7565",
+      r: "0x727272"
+    };
 
-    ethUtil.defineProperties(someOb, fields, data)
-    assert.deepEqual(someOb.toJSON(true), expected, 'should produce the correctly labeled object')
+    const expectedArray = [
+      "0x74657374", "0x", "0x6e6f74207a65726f", "0x612076616c7565", "0x727272"
+    ];
 
-    var someOb2 = {}
-    var rlpEncoded = someOb.serialize().toString('hex')
-    ethUtil.defineProperties(someOb2, fields, rlpEncoded)
-    assert.equal(someOb2.serialize().toString('hex'), rlpEncoded, 'the constuctor should accept rlp encoded buffers')
+    ethUtil.defineProperties(someOb, fields, data);
 
-    var someOb3 = {}
-    ethUtil.defineProperties(someOb3, fields, expectedArray)
-    assert.deepEqual(someOb.toJSON(), expectedArray, 'should produce the correctly object')
-  })
+    // "should produce the correctly labeled object"
+    expect(someOb.toJSON(true)).toEqual(expected);
 
-  it('it should not accept invalid values in the constuctor', function () {
-    var someOb = {}
-    assert.throws(function () {
-      ethUtil.defineProperties(someOb, fields, 5)
-    }, 'should throw on nonsensical data')
+    const someOb2 = {};
+    const rlpEncoded = someOb.serialize().toString("hex");
 
-    assert.throws(function () {
-      ethUtil.defineProperties(someOb, fields, Array(6))
-    }, 'should throw on invalid arrays')
-  })
+    ethUtil.defineProperties(someOb2, fields, rlpEncoded);
 
-  it('alias should work ', function () {
-    var someOb = {}
-    var data = {
-      aword: 'test',
-      cannotBeZero: 'not zero',
-      value: 'a value',
-      r: 'rrr'
-    }
+    // "the constuctor should accept rlp encoded buffers"
+    expect(someOb2.serialize().toString("hex")).toBe(rlpEncoded);
 
-    ethUtil.defineProperties(someOb, fields, data)
-    assert.equal(someOb.blah.toString(), 'test')
-    someOb.blah = 'lol'
-    assert.equal(someOb.blah.toString(), 'lol')
-    assert.equal(someOb.aword.toString(), 'lol')
-  })
+    const someOb3 = {};
 
-  it('alias should work #2', function () {
-    var someOb = {}
-    var data = { blah: '42' }
+    ethUtil.defineProperties(someOb3, fields, expectedArray);
 
-    ethUtil.defineProperties(someOb, fields, data)
-    assert.equal(someOb.blah, '42')
-    assert.equal(someOb.aword, '42')
-  })
-})
+    // "should produce the correctly object"
+    expect(someOb.toJSON()).toEqual(expectedArray);
+  });
+
+  test("it should not accept invalid values in the constuctor", () => {
+    const someOb = {};
+
+    // "should throw on nonsensical data"
+    expect(() => {
+      ethUtil.defineProperties(someOb, fields, 5);
+    }).toThrow();
+
+    // "should throw on invalid arrays"
+    expect(() => {
+      ethUtil.defineProperties(someOb, fields, new Array(6));
+    }).toThrow();
+  });
+
+  test("alias should work ", () => {
+    const someOb = {};
+    const data = {
+      aword: "test",
+      cannotBeZero: "not zero",
+      value: "a value",
+      r: "rrr"
+    };
+
+    ethUtil.defineProperties(someOb, fields, data);
+    expect(someOb.blah.toString()).toBe("test");
+    someOb.blah = "lol";
+    expect(someOb.blah.toString()).toBe("lol");
+    expect(someOb.aword.toString()).toBe("lol");
+  });
+
+  test("alias should work #2", () => {
+    const someOb = {};
+    const data = {blah: "42"};
+
+    ethUtil.defineProperties(someOb, fields, data);
+    expect(someOb.blah).toBe("42");
+    expect(someOb.aword).toBe("42");
+  });
+});

@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "prepublishOnly": "npm run lint && npm run build:dist && npm run test",
-    "test": "npm run test:node && npm run test:browser",
+    "test": "jest",
     "test:browser": "npm run build:dist && karma start karma.conf.js",
     "test:node": "npm run build:dist && istanbul test mocha -- --reporter spec",
     "build:dist": "babel index.js --source-root ./ -d ./dist",
@@ -35,6 +35,7 @@
     "coveralls": "^3.0.0",
     "documentation": "^5.2.0",
     "istanbul": "^0.4.1",
+    "jest": "^23.1.0",
     "karma": "^2.0.0",
     "karma-browserify": "^5.0.0",
     "karma-chrome-launcher": "^2.0.0",
