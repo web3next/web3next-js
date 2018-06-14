@@ -1,5 +1,12 @@
 {
-	"devDependencies": {
-		"lerna": "^2.11.0"
-	}
+  "scripts": {
+    "lint": "eslint \"./**/*.js\"",
+    "lint-fix": "eslint --fix \"./**/*.js\""
+  },
+  "devDependencies": {
+    "lerna": "^2.11.0",
+    "eslint": "^5.0.0-rc.0",
+    "eslint-config-canonical": "^10.2.1",
+    "eslint-plugin-promise": "^3.8.0"
+  }
 }
