@@ -1,23 +1,26 @@
-const PrioritizedTaskExecutor = require('../prioritizedTaskExecutor.js')
-const tape = require('tape')
-const taskExecutor = new PrioritizedTaskExecutor(2)
+const tape = require("tape");
+const PrioritizedTaskExecutor = require("../prioritizedTaskExecutor.js");
 
-tape('prioritized task executor test', function (t) {
-  var tasks = [1, 2, 3, 4]
-  var callbacks = []
-  var executionOrder = []
-  tasks.forEach(function (task) {
-    taskExecutor.execute(task, function (cb) {
-      executionOrder.push(task)
-      callbacks.push(cb)
-    })
-  })
+const taskExecutor = new PrioritizedTaskExecutor(2);
 
-  callbacks.forEach(function (callback) {
-    callback()
-  })
+tape("prioritized task executor test", (t) => {
+  const tasks = [1, 2, 3, 4];
+  const callbacks = [];
+  const executionOrder = [];
 
-  var expectedExecutionOrder = [1, 2, 4, 3]
-  t.deepEqual(executionOrder, expectedExecutionOrder)
-  t.end()
-})
+  tasks.forEach((task) => {
+    taskExecutor.execute(task, (cb) => {
+      executionOrder.push(task);
+      callbacks.push(cb);
+    });
+  });
+
+  callbacks.forEach((callback) => {
+    callback();
+  });
+
+  const expectedExecutionOrder = [1, 2, 4, 3];
+
+  t.deepEqual(executionOrder, expectedExecutionOrder);
+  t.end();
+});

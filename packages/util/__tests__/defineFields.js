@@ -1,4 +1,4 @@
-const  ethUtil = require("..");
+const ethUtil = require("..");
 
 const fields = Object.freeze([{
   name: "aword",

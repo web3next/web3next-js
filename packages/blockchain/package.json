@@ -3,7 +3,7 @@
   "description": "A module to store and interact with blocks",
   "main": "index.js",
   "scripts": {
-    "test": "tape ./test/index.js"
+    "test": "jest"
   },
 
   "keywords": [

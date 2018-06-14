@@ -8,11 +8,12 @@
   },
   "devDependencies": {
     "istanbul": "^0.4.1",
+    "jest": "^23.1.0",
     "mocha": "^2.1.0"
   },
   "scripts": {
     "prepublish": "npm run lint && npm run test",
-    "test": "istanbul test _mocha -- --reporter spec"
+    "test": "jest"
   },
   "keywords": [
     "ethereum",

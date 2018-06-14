@@ -3,7 +3,7 @@
   "description": "Encoding, decoding and validation of Ethereum's Account schema",
   "main": "index.js",
   "scripts": {
-    "test": "tape ./test/index.js"
+    "test": "jest"
   },
   "keywords": [
     "ethereum",
@@ -15,6 +15,7 @@
     "safe-buffer": "^5.1.1"
   },
   "devDependencies": {
+    "jest": "^23.1.0",
     "nyc": "^11.7.1"
   }
 }
