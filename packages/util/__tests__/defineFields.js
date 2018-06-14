@@ -1,4 +1,4 @@
-import ethUtil from "..";
+const  ethUtil = require("..");
 
 const fields = Object.freeze([{
   name: "aword",

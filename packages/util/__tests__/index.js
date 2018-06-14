@@ -1,5 +1,5 @@
-import BN from "bn.js";
-import ethUtils from "..";
+const BN = require("bn.js");
+const ethUtils =require( "..");
 
 describe("zeros function", () => {
   test("should produce lots of 0s", () => {
