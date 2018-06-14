@@ -1,0 +1,26 @@
+{
+  "name": "@w3n/abi",
+  "description": "Decoder and encoder for the Ethereum ABI",
+  "main": "index.js",
+  "dependencies": {
+    "bn.js": "^4.10.0",
+    "ethereumjs-util": "^5.0.0"
+  },
+  "devDependencies": {
+    "coveralls": "^2.11.4",
+    "istanbul": "^0.4.1",
+    "mocha": "^2.1.0",
+    "standard": "^5.4.1"
+  },
+  "scripts": {
+    "coverage": "istanbul cover _mocha",
+    "coveralls": "npm run coverage && coveralls <coverage/lcov.info",
+    "lint": "standard",
+    "prepublish": "npm run lint && npm run test",
+    "test": "istanbul test _mocha -- --reporter spec"
+  },
+  "keywords": [
+    "ethereum",
+    "ABI"
+  ]
+}
