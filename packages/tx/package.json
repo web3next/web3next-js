@@ -3,7 +3,7 @@
   "description": "An simple module for creating, manipulating and signing ethereum transactions",
   "main": "es5/index.js",
   "scripts": {
-    "test": "npm run test:node && npm run test:browser",
+    "test": "jest",
     "test:browser": "karma start karma.conf.js",
     "test:node": "tape ./test/index.js",
     "build:es5": "babel index.js --source-root ./ -d ./es5",
@@ -27,6 +27,7 @@
     "contributor": "^0.1.25",
     "documentation": "^3.0.4",
     "ethereumjs-testing": "0.0.1",
+    "jest": "^23.1.0",
     "karma": "^1.1.1",
     "karma-browserify": "^5.1.0",
     "karma-detect-browsers": "^2.0.2",
