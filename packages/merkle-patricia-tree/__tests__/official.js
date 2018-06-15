@@ -1,15 +1,14 @@
 const async = require("async");
-const tape = require("tape");
 const jsonTests = require("ethereumjs-testing").tests.trieTests;
 const Trie = require("..");
 
-tape("offical tests", (t) => {
+test("official tests", () => {
   let trie = new Trie();
   const testNames = Object.keys(jsonTests.trietest);
 
   async.eachSeries(testNames, (i, done) => {
     const inputs = jsonTests.trietest[i].in;
-    const expect = jsonTests.trietest[i].root;
+    const expected = jsonTests.trietest[i].root;
 
     async.eachSeries(inputs, (input, done) => {
       for (i = 0; i < 2; i++) {
@@ -22,14 +21,14 @@ tape("offical tests", (t) => {
         done();
       });
     }, () => {
-      t.equal("0x" + trie.root.toString("hex"), expect);
+      expect("0x" + trie.root.toString("hex")).toBe(expected);
       trie = new Trie();
       done();
     });
-  }, t.end);
+  });
 });
 
-tape("offical tests any order", (t) => {
+test("official tests any order", () => {
   const testNames = Object.keys(jsonTests.trieanyorder);
   let trie = new Trie();
 
@@ -52,9 +51,9 @@ tape("offical tests any order", (t) => {
         done();
       });
     }, () => {
-      t.equal("0x" + trie.root.toString("hex"), test.root);
+      expect("0x" + trie.root.toString("hex")).toBe(test.root);
       trie = new Trie();
       done();
     });
-  }, t.end);
+  });
 });

@@ -1,11 +1,8 @@
 const async = require("async");
-const tape = require("tape");
 const Trie = require("..");
 
-tape("simple merkle proofs generation and verification", (tester) => {
-  const it = tester.test;
-
-  it("create a merkle proof and verify it", (t) => {
+describe("simple merkle proofs generation and verification", () => {
+  test("create a merkle proof and verify it", () => {
     const trie = new Trie();
 
     async.series([
@@ -27,7 +24,7 @@ tape("simple merkle proofs generation and verification", (tester) => {
             if (err) {
               return cb(err);
             }
-            t.equal(val.toString("utf8"), "aval2");
+            expect(val.toString("utf8")).toBe("aval2");
             cb();
           });
         });
@@ -41,7 +38,7 @@ tape("simple merkle proofs generation and verification", (tester) => {
             if (err) {
               return cb(err);
             }
-            t.equal(val.toString("utf8"), "0123456789012345678901234567890123456789xx");
+            expect(val.toString("utf8")).toBe("0123456789012345678901234567890123456789xx");
             cb();
           });
         });
@@ -52,7 +49,7 @@ tape("simple merkle proofs generation and verification", (tester) => {
             return cb(err);
           }
           Trie.verifyProof(trie.root, "randomkey", prove, (err, val) => {
-            t.notEqual(err, null, "Expected error: " + err.message);
+            expect(err).not.toBe(null);
             cb();
           });
         });
@@ -63,7 +60,7 @@ tape("simple merkle proofs generation and verification", (tester) => {
             return cb(err);
           }
           Trie.verifyProof(trie.root, "key2b", prove, (err, val) => {
-            t.notEqual(err, null, "Expected error: " + err.message);
+            expect(err).not.toBe(null);
             cb();
           });
         });
@@ -75,17 +72,16 @@ tape("simple merkle proofs generation and verification", (tester) => {
           }
           prove.push(Buffer.from("123456"));
           Trie.verifyProof(trie.root, "key2b", prove, (err, val) => {
-            t.notEqual(err, null, "Expected error: " + err.message);
+            expect(err).not.toBe(null);
             cb();
           });
         });
       }
     ], (err) => {
-      t.end(err);
     });
   });
 
-  it("create a merkle proof and verify it with a single long key", (t) => {
+  test("create a merkle proof and verify it with a single long key", () => {
     const trie = new Trie();
 
     async.series([
@@ -101,17 +97,17 @@ tape("simple merkle proofs generation and verification", (tester) => {
             if (err) {
               return cb(err);
             }
-            t.equal(val.toString("utf8"), "0123456789012345678901234567890123456789xx");
+            expect(val.toString("utf8")).toBe("0123456789012345678901234567890123456789xx");
             cb();
           });
         });
       }
     ], (err) => {
-      t.end(err);
+
     });
   });
 
-  it("create a merkle proof and verify it with a single short key", (t) => {
+  test("create a merkle proof and verify it with a single short key", () => {
     const trie = new Trie();
 
     async.series([
@@ -127,17 +123,17 @@ tape("simple merkle proofs generation and verification", (tester) => {
             if (err) {
               return cb(err);
             }
-            t.equal(val.toString("utf8"), "01234");
+            expect(val.toString("utf8")).toBe("01234");
             cb();
           });
         });
       }
     ], (err) => {
-      t.end(err);
+
     });
   });
 
-  it("create a merkle proof and verify it whit keys in the midle", (t) => {
+  test("create a merkle proof and verify it whit keys in the midle", () => {
     const trie = new Trie();
 
     async.series([
@@ -168,7 +164,7 @@ tape("simple merkle proofs generation and verification", (tester) => {
             if (err) {
               return cb(err);
             }
-            t.equal(val.toString("utf8"), "0123456789012345678901234567890123456789Very_Long");
+            expect(val.toString("utf8")).toBe("0123456789012345678901234567890123456789Very_Long");
             cb();
           });
         });
@@ -182,7 +178,7 @@ tape("simple merkle proofs generation and verification", (tester) => {
             if (err) {
               return cb(err);
             }
-            t.equal(val.toString("utf8"), "short");
+            expect(val.toString("utf8")).toBe("short");
             cb();
           });
         });
@@ -196,13 +192,12 @@ tape("simple merkle proofs generation and verification", (tester) => {
             if (err) {
               return cb(err);
             }
-            t.equal(val.toString("utf8"), "1234567890123456789012345678901");
+            expect(val.toString("utf8")).toBe("1234567890123456789012345678901");
             cb();
           });
         });
       }
     ], (err) => {
-      t.end(err);
     });
   });
 });

@@ -1,6 +1,5 @@
 /* eslint-disable node/no-deprecated-api */
 
-const test = require("tape");
 const SafeBuffer = require("..").Buffer;
 
 test("new SafeBuffer(value) works just like Buffer", (t) => {

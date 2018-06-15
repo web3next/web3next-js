@@ -1,70 +1,56 @@
 const crypto = require("crypto");
-const tape = require("tape");
 const Trie = require("..");
 
-tape("put & get raw functions", (it) => {
+describe("put & get raw functions", () => {
   const trie = new Trie();
   const key = crypto.randomBytes(32);
   const val = crypto.randomBytes(32);
 
-  it.test("putRaw", (t) => {
-    trie.putRaw(key, val, t.end);
-  });
-
-  it.test("getRaw", (t) => {
-    trie.getRaw(key, (err, rVal) => {
-      t.equal(val.toString("hex"), rVal.toString("hex"));
-      t.end(err);
+  test("getRaw", () => {
+    trie.putRaw(key, val, () => {
+      trie.getRaw(key, (err, rVal) => {
+        expect(val.toString("hex")).toEqual(rVal.toString("hex"));
+      });
     });
   });
 
-  it.test("should checkpoint and get the rawVal", (t) => {
+  test("should checkpoint and get the rawVal", () => {
     trie.checkpoint();
     trie.getRaw(key, (err, rVal) => {
-      t.equal(val.toString("hex"), rVal.toString("hex"));
-      t.end(err);
+      expect(val.toString("hex")).toEqual(rVal.toString("hex"));
     });
   });
 
   const key2 = crypto.randomBytes(32);
   const val2 = crypto.randomBytes(32);
 
-  it.test("should store while in a checkpoint", (t) => {
-    trie.putRaw(key2, val2, t.end);
-  });
-
-  it.test("should retrieve from a checkpoint", (t) => {
-    trie.getRaw(key2, (err, rVal) => {
-      t.equal(val2.toString("hex"), rVal.toString("hex"));
-      t.end(err);
+  test("should retrieve from a checkpoint", () => {
+    trie.putRaw(key2, val2, () => {
+      trie.getRaw(key2, (err, rVal) => {
+        expect(val2.toString("hex")).toEqual(rVal.toString("hex"));
+      });
     });
   });
 
-  it.test("should not retiev after revert", (t) => {
-    trie.revert(t.end);
-  });
-
-  it.test("should delete raw", (t) => {
-    trie.delRaw(val2, t.end);
-  });
-
-  it.test("should not get val after delete ", (t) => {
-    trie.getRaw(val2, (err, val) => {
-      t.notok(val);
-      t.end(err);
+  test("should not get val after delete ", () => {
+    trie.revert(() => {
+      trie.delRaw(val2, () => {
+        trie.getRaw(val2, (err, deletedVal) => {
+          expect(deletedVal).not.toBeTruthy();
+        });
+      });
     });
   });
 
   const key3 = crypto.randomBytes(32);
   const val3 = crypto.randomBytes(32);
 
-  it.test("test commit behavoir", (t) => {
+  test("test commit behavoir", () => {
     trie.checkpoint();
     trie.putRaw(key3, val3, () => {
       trie.commit(() => {
-        trie.getRaw(key3, (err, val) => {
-          t.equal(val.toString("hex"), val3.toString("hex"));
-          t.end(err);
+        trie.getRaw(key3, (err, committedVal) => {
+          expect(committedVal.toString("hex")).toEqual(val3.toString("hex"));
         });
       });
     });

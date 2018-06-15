@@ -1,9 +1,8 @@
-const tape = require("tape");
 const PrioritizedTaskExecutor = require("../prioritizedTaskExecutor.js");
 
 const taskExecutor = new PrioritizedTaskExecutor(2);
 
-tape("prioritized task executor test", (t) => {
+test("prioritized task executor test", () => {
   const tasks = [1, 2, 3, 4];
   const callbacks = [];
   const executionOrder = [];
@@ -21,6 +20,5 @@ tape("prioritized task executor test", (t) => {
 
   const expectedExecutionOrder = [1, 2, 4, 3];
 
-  t.deepEqual(executionOrder, expectedExecutionOrder);
-  t.end();
+  expect(executionOrder).toEqual(expectedExecutionOrder);
 });

@@ -1,8 +1,6 @@
-const describe = require("tape");
 const Trie = require("..");
 
-describe("kv stream test", (tester) => {
-  const it = tester.test;
+describe("kv stream test", () => {
   const trie = new Trie();
   const init = [{
     type: "del",
@@ -81,82 +79,79 @@ describe("kv stream test", (tester) => {
     }
   });
 
-  it("should populate trie", (t) => {
+  test("should fetch all of the nodes", () => {
     trie.batch(init, () => {
-      t.end();
-    });
-  });
+      const stream = trie.createReadStream();
 
-  it("should fetch all of the nodes", (t) => {
-    const stream = trie.createReadStream();
+      return expect(new Promise((resolve, reject) => {
+        stream.on("data", (d) => {
+          expect(valObj[d.key.toString()]).toBe(d.value.toString());
+          delete valObj[d.key.toString()];
+        });
+        stream.on("end", () => {
+          const keys = Object.keys(valObj);
 
-    stream.on("data", (d) => {
-      t.equal(valObj[d.key.toString()], d.value.toString());
-      delete valObj[d.key.toString()];
-    });
-    stream.on("end", () => {
-      const keys = Object.keys(valObj);
-
-      t.equal(keys.length, 0);
-      t.end();
+          resolve(keys.length);
+        });
+      })).resolves.toBe(0);
     });
   });
 });
 
-describe("db stream test", (tester) => {
-  const it = tester.test;
-  const trie = new Trie();
-  const init = [{
-    type: "put",
-    key: "color",
-    value: "purple"
-  }, {
-    type: "put",
-    key: "food",
-    value: "sushi"
-  }, {
-    type: "put",
-    key: "fight",
-    value: "fire"
-  }, {
-    type: "put",
-    key: "colo",
-    value: "trolo"
-  }, {
-    type: "put",
-    key: "color",
-    value: "blue"
-  }, {
-    type: "put",
-    key: "color",
-    value: "pink"
-  }];
+describe("db stream test", () => {
+  test("should only fetch nodes in the current trie", () => {
+    const trie = new Trie();
+    const init = [{
+      type: "put",
+      key: "color",
+      value: "purple"
+    }, {
+      type: "put",
+      key: "food",
+      value: "sushi"
+    }, {
+      type: "put",
+      key: "fight",
+      value: "fire"
+    }, {
+      type: "put",
+      key: "colo",
+      value: "trolo"
+    }, {
+      type: "put",
+      key: "color",
+      value: "blue"
+    }, {
+      type: "put",
+      key: "color",
+      value: "pink"
+    }];
 
-  const expectedNodes = {
-    "3c38d9aa6ad288c8e27da701e17fe99a5b67c8b12fd0469651c80494d36bc4c1": true,
-    d5f61e1ff2b918d1c2a2c4b1732a3c68bd7e3fd64f35019f2f084896d4546298: true,
-    e64329dadee2fb8a113b4c88cfe973aeaa9b523d4dc8510b84ca23f9d5bfbd90: true,
-    c916d458bfb5f27603c5bd93b00f022266712514a59cde749f19220daffc743f: true,
-    "2386bfb0de9cf93902a110f5ab07b917ffc0b9ea599cb7f4f8bb6fd1123c866c": true
-  };
+    const expectedNodes = {
+      "3c38d9aa6ad288c8e27da701e17fe99a5b67c8b12fd0469651c80494d36bc4c1": true,
+      d5f61e1ff2b918d1c2a2c4b1732a3c68bd7e3fd64f35019f2f084896d4546298: true,
+      e64329dadee2fb8a113b4c88cfe973aeaa9b523d4dc8510b84ca23f9d5bfbd90: true,
+      c916d458bfb5f27603c5bd93b00f022266712514a59cde749f19220daffc743f: true,
+      "2386bfb0de9cf93902a110f5ab07b917ffc0b9ea599cb7f4f8bb6fd1123c866c": true
+    };
 
-  it("should populate trie", (t) => {
     trie.checkpoint();
-    trie.batch(init, t.end);
-  });
+    trie.batch(init, () => {
+      const stream = trie.createScratchReadStream();
 
-  it("should only fetch nodes in the current trie", (t) => {
-    const stream = trie.createScratchReadStream();
+      return new Promise((resolve, reject) => {
+        stream.on("data", (d) => {
+          const key = d.key.toString("hex");
 
-    stream.on("data", (d) => {
-      const key = d.key.toString("hex");
-
-      t.ok(Boolean(expectedNodes[key]));
-      delete expectedNodes[key];
-    });
-    stream.on("end", () => {
-      t.equal(Object.keys(expectedNodes).length, 0);
-      t.end();
+          expect(Boolean(expectedNodes[key])).toBeTruthy();
+          delete expectedNodes[key];
+        });
+        stream.on("end", () => {
+          resolve(Object.keys(expectedNodes).length);
+        });
+      }).then((l) => {
+        return expect(l).toBe(0);
+      });
     });
   });
 });

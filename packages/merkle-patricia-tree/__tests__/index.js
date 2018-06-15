@@ -1,163 +1,153 @@
 const async = require("async");
 const rlp = require("rlp");
-const tape = require("tape");
 const ethUtil = require("ethereumjs-util");
 const Trie = require("..");
 
-tape("simple save and retrive", (tester) => {
-  const it = tester.test;
+describe("simple save and retrive", () => {
+  const root = Buffer.from("3f4399b08efe68945c1cf90ffe85bbe3ce978959da753f9e649f034015b8817d", "hex");
 
-  it("should not crash if given a non-existant root", (t) => {
-    const root = Buffer.from("3f4399b08efe68945c1cf90ffe85bbe3ce978959da753f9e649f034015b8817d", "hex");
+  test("should not crash if given a non-existant root", () => {
     const trie = new Trie(null, root);
 
     trie.get("test", (err, value) => {
-      t.equal(value, null);
-      t.end(err);
+      expect(value).toBe(null);
     });
   });
 
-  const trie = new Trie();
+  test("should get a value", () => {
+    const trie = new Trie(null, root);
 
-  it("save a value", (t) => {
-    trie.put("test", "one", t.end);
-  });
-
-  it("should get a value", (t) => {
-    trie.get("test", (err, value) => {
-      t.equal(value.toString(), "one");
-      t.end(err);
+    trie.put("test", "one", () => {
+      trie.get("test", (err, value) => {
+        expect(value.toString()).toBe("one");
+      });
     });
   });
 
-  it("should update a value", (t) => {
+  test("should update a value", () => {
+    const trie = new Trie(null, root);
+
     trie.put("test", Buffer.from("two"), () => {
       trie.get("test", (err, value) => {
-        t.equal(value.toString(), "two");
-        t.end(err);
+        expect(value.toString()).toBe("two");
       });
     });
   });
 
-  it("should delete a value", (t) => {
+  test("should delete a value", () => {
+    const trie = new Trie(null, root);
+
     trie.del("test", (stack) => {
       trie.get("test", (err, value) => {
-        t.notok(value);
-        t.end(err);
+        expect(value).toBeFalsy();
       });
     });
   });
 
-  it("should recreate a value", (t) => {
-    trie.put(Buffer.from("test"), Buffer.from("one"), t.end);
-  });
+  test("should get updated a value", () => {
+    const trie = new Trie(null, root);
 
-  it("should get updated a value", (t) => {
-    trie.get("test", (err, value) => {
-      t.equal(value.toString(), "one");
-      t.end(err);
+    trie.put(Buffer.from("test"), Buffer.from("one"), () => {
+      trie.get("test", (err, value) => {
+        expect(value.toString()).toBe("one");
+      });
     });
   });
 
-  it("should create a branch here", (t) => {
+  test("should get a value that is in a branch", () => {
+    const trie = new Trie(null, root);
+
     trie.put(Buffer.from("doge"), Buffer.from("coin"), () => {
-      t.equal("de8a34a8c1d558682eae1528b47523a483dd8685d6db14b291451a66066bf0fc", trie.root.toString("hex"));
-      t.end();
+      expect("de8a34a8c1d558682eae1528b47523a483dd8685d6db14b291451a66066bf0fc").toBe(trie.root.toString("hex"));
+      trie.get(Buffer.from("doge"), (err, value) => {
+        expect(value.toString()).toBe("coin");
+      });
     });
   });
 
-  it("should get a value that is in a branch", (t) => {
-    trie.get(Buffer.from("doge"), (err, value) => {
-      t.equal(value.toString(), "coin");
-      t.end(err);
-    });
-  });
+  test("should delete from a branch", () => {
+    const trie = new Trie(null, root);
 
-  it("should delete from a branch", (t) => {
     trie.del("doge", (err1, stack) => {
       trie.get("doge", (err2, value) => {
-        t.equal(value, null);
-        t.end(err1 || err2);
+        expect(value).toBe(null);
       });
     });
   });
 });
 
-tape("storing longer values", (tester) => {
-  const it = tester.test;
+describe("storing longer values", () => {
   const trie = new Trie();
   const longString = "this will be a really really really long value";
   const longStringRoot = "b173e2db29e79c78963cff5196f8a983fbe0171388972106b114ef7f5c24dfa3";
 
-  it("should store a longer string", (t) => {
+  test("should store a longer string", () => {
     trie.put(Buffer.from("done"), Buffer.from(longString), (err1, value) => {
       trie.put(Buffer.from("doge"), Buffer.from("coin"), (err2, value) => {
-        t.equal(longStringRoot, trie.root.toString("hex"));
-        t.end(err1 || err2);
+        expect(longStringRoot).toBe(trie.root.toString("hex"));
       });
     });
   });
 
-  it("should retreive a longer value", (t) => {
+  test("should retreive a longer value", () => {
     trie.get(Buffer.from("done"), (err, value) => {
-      t.equal(value.toString(), longString);
-      t.end(err);
+      expect(value.toString()).toBe(longString);
     });
   });
 
-  it("should when being modiefied delete the old value", (t) => {
-    trie.put(Buffer.from("done"), Buffer.from("test"), t.end);
+  test("should when being modiefied delete the old value", () => {
   });
 });
 
-tape("testing Extentions and branches", (tester) => {
-  const trie = new Trie();
-  const it = tester.test;
+describe("testing Extentions and branch", () => {
+  test("should create extention to store this value", () => {
+    const trie = new Trie();
+    const longString = "this will be a really really really long value";
 
-  it("should store a value", (t) => {
-    trie.put(Buffer.from("doge"), Buffer.from("coin"), t.end);
-  });
-
-  it("should create extention to store this value", (t) => {
-    trie.put(Buffer.from("do"), Buffer.from("verb"), () => {
-      t.equal("f803dfcb7e8f1afd45e88eedb4699a7138d6c07b71243d9ae9bff720c99925f9", trie.root.toString("hex"));
-      t.end();
+    trie.put(Buffer.from("done"), Buffer.from(longString), (err1, value) => {
+      trie.put(Buffer.from("doge"), Buffer.from("coin"), (err2, value) => {
+        trie.put(Buffer.from("done"), Buffer.from("test"), () => {
+          trie.put(Buffer.from("doge"), Buffer.from("coin"), () => {
+            trie.put(Buffer.from("do"), Buffer.from("verb"), () => {
+              expect("f803dfcb7e8f1afd45e88eedb4699a7138d6c07b71243d9ae9bff720c99925f9").toBe(trie.root.toString("hex"));
+            });
+          });
+        });
+      });
     });
   });
 
-  it("should store this value under the extention ", (t) => {
-    trie.put(Buffer.from("done"), Buffer.from("finished"), () => {
-      t.equal("409cff4d820b394ed3fb1cd4497bdd19ffa68d30ae34157337a7043c94a3e8cb", trie.root.toString("hex"));
-      t.end();
-    });
-  });
-});
+  test("should store this value under the extention ", () => {
+    const trie2 = new Trie();
 
-tape("testing Extentions and branches - reverse", (tester) => {
-  const it = tester.test;
-  const trie = new Trie();
-
-  it("should create extention to store this value", (t) => {
-    trie.put(Buffer.from("do"), Buffer.from("verb"), t.end);
-  });
-
-  it("should store a value", (t) => {
-    trie.put(Buffer.from("doge"), Buffer.from("coin"), t.end);
-  });
-
-  it("should store this value under the extention ", (t) => {
-    trie.put(Buffer.from("done"), Buffer.from("finished"), () => {
-      t.equal("409cff4d820b394ed3fb1cd4497bdd19ffa68d30ae34157337a7043c94a3e8cb", trie.root.toString("hex"));
-      t.end();
+    trie2.put(Buffer.from("doge"), Buffer.from("coin"), () => {
+      trie2.put(Buffer.from("do"), Buffer.from("verb"), () => {
+        trie2.put(Buffer.from("done"), Buffer.from("finished"), () => {
+          expect("409cff4d820b394ed3fb1cd4497bdd19ffa68d30ae34157337a7043c94a3e8cb").toBe(trie2.root.toString("hex"));
+        });
+      });
     });
   });
 });
 
-tape("testing deletions cases", (tester) => {
-  const it = tester.test;
-  let trie = new Trie();
+describe("testing Extentions and branches - rever", () => {
+  const trie3 = new Trie();
 
-  it("should delete from a branch->branch-branch", (t) => {
+  test("should store this value under the extention ", () => {
+    trie3.put(Buffer.from("do"), Buffer.from("verb"), () => {
+      trie3.put(Buffer.from("doge"), Buffer.from("coin"), () => {
+        trie3.put(Buffer.from("done"), Buffer.from("finished"), () => {
+          expect("409cff4d820b394ed3fb1cd4497bdd19ffa68d30ae34157337a7043c94a3e8cb").toBe(trie3.root.toString("hex"));
+        });
+      });
+    });
+  });
+});
+
+describe("testing deletions cases", () => {
+  test("should delete from a branch->branch-branch", () => {
+    let trie = new Trie();
+
     async.parallel([
       async.apply(trie.put.bind(trie), Buffer.from([11, 11, 11]), "first"),
       async.apply(trie.put.bind(trie), Buffer.from([12, 22, 22]), "create the first branch"),
@@ -165,15 +155,16 @@ tape("testing deletions cases", (tester) => {
     ], () => {
       trie.del(Buffer.from([12, 22, 22]), () => {
         trie.get(Buffer.from([12, 22, 22]), (err, val) => {
-          t.equal(null, val);
+          expect(null).toBe(val);
           trie = new Trie();
-          t.end(err);
         });
       });
     });
   });
 
-  it("should delete from a branch->branch-extention", (t) => {
+  test("should delete from a branch->branch-extention", () => {
+    const trie = new Trie();
+
     async.parallel([
       async.apply(trie.put.bind(trie), Buffer.from([11, 11, 11]), "first"),
       async.apply(trie.put.bind(trie), Buffer.from([12, 22, 22]), "create the first branch"),
@@ -182,14 +173,15 @@ tape("testing deletions cases", (tester) => {
     ], () => {
       trie.del(Buffer.from([12, 22, 22]), () => {
         trie.get(Buffer.from([12, 22, 22]), (err, val) => {
-          t.equal(null, val);
-          t.end(err);
+          expect(null).toBe(val);
         });
       });
     });
   });
 
-  it("should delete from a extention->branch-extention", (t) => {
+  test("should delete from a extention->branch-extention", () => {
+    const trie = new Trie();
+
     trie.put(Buffer.from([11, 11, 11]), "first", () => {
       // create the top branch
       trie.put(Buffer.from([12, 22, 22]), "create the first branch", () => {
@@ -199,8 +191,7 @@ tape("testing deletions cases", (tester) => {
             // delete the middle branch
             trie.del(Buffer.from([11, 11, 11]), () => {
               trie.get(Buffer.from([11, 11, 11]), (err, val) => {
-                t.equal(null, val);
-                t.end(err);
+                expect(null).toBe(val);
               });
             });
           });
@@ -209,7 +200,9 @@ tape("testing deletions cases", (tester) => {
     });
   });
 
-  it("should delete from a extention->branch-branch", (t) => {
+  test("should delete from a extention->branch-branch", () => {
+    const trie = new Trie();
+
     trie.put(Buffer.from([11, 11, 11]), "first", () => {
       // create the top branch
       trie.put(Buffer.from([12, 22, 22]), "create the first branch", () => {
@@ -219,8 +212,7 @@ tape("testing deletions cases", (tester) => {
             // delete the middle branch
             trie.del(Buffer.from([11, 11, 11]), () => {
               trie.get(Buffer.from([11, 11, 11]), (err, val) => {
-                t.equal(null, val);
-                t.end(err);
+                expect(null).toBe(val);
               });
             });
           });
@@ -230,57 +222,45 @@ tape("testing deletions cases", (tester) => {
   });
 });
 
-tape("testing checkpoints", (tester) => {
+describe("testing checkpoints", () => {
   let postRoot; let preRoot; let trie;
-  const it = tester.test;
 
-  it("setup", (t) => {
+  test("setup", () => {
     trie = new Trie();
     trie.put("do", "verb", () => {
       trie.put("doge", "coin", () => {
         preRoot = trie.root.toString("hex");
-        t.end();
       });
     });
   });
 
-  it("should create a checkpoint", (t) => {
+  test("should revert to the orginal root", () => {
     trie.checkpoint();
-    t.end();
-  });
-
-  it("should save to the cache", (t) => {
     trie.put("test", "something", () => {
       trie.put("love", "emotion", () => {
         postRoot = trie.root.toString("hex");
-        t.end();
-      });
-    });
-  });
-
-  it("should revert to the orginal root", (t) => {
-    t.equal(trie.isCheckpoint, true);
-    trie.revert(() => {
-      t.equal(trie.root.toString("hex"), preRoot);
-      t.equal(trie.isCheckpoint, false);
-      t.end();
-    });
-  });
-
-  it("should commit a checkpoint", (t) => {
-    trie.checkpoint();
-    trie.put("test", "something", () => {
-      trie.put("love", "emotion", () => {
-        trie.commit(() => {
-          t.equal(trie.isCheckpoint, false);
-          t.equal(trie.root.toString("hex"), postRoot);
-          t.end();
+        expect(trie.isCheckpoint).toBe(true);
+        trie.revert(() => {
+          expect(trie.root.toString("hex")).toBe(preRoot);
+          expect(trie.isCheckpoint).toBe(false);
         });
       });
     });
   });
 
-  it("should commit a nested checkpoint", (t) => {
+  test("should commit a checkpoint", () => {
+    trie.checkpoint();
+    trie.put("test", "something", () => {
+      trie.put("love", "emotion", () => {
+        trie.commit(() => {
+          expect(trie.isCheckpoint).toBe(false);
+          expect(trie.root.toString("hex")).toBe(postRoot);
+        });
+      });
+    });
+  });
+
+  test("should commit a nested checkpoint", () => {
     trie.checkpoint();
     let root;
 
@@ -290,17 +270,15 @@ tape("testing checkpoints", (tester) => {
       trie.put("the feels", "emotion", () => {
         trie.revert();
         trie.commit(() => {
-          t.equal(trie.isCheckpoint, false);
-          t.equal(trie.root.toString("hex"), root.toString("hex"));
-          t.end();
+          expect(trie.isCheckpoint).toBe(false);
+          expect(trie.root.toString("hex")).toBe(root.toString("hex"));
         });
       });
     });
   });
 });
 
-tape("it should create the genesis state root from ethereum", (tester) => {
-  const it = tester.test;
+describe("it should create the genesis state root from ethereum", () => {
   const trie4 = new Trie();
   const g = Buffer.from("8a40bfaa73256b60764c1bf40675a99083efb075", "hex");
   const j = Buffer.from("e6716f9544a56c530d868e4bfbacb172315bdead", "hex");
@@ -319,15 +297,14 @@ tape("it should create the genesis state root from ethereum", (tester) => {
 
   const genesisStateRoot = "2f4399b08efe68945c1cf90ffe85bbe3ce978959da753f9e649f034015b8817d";
 
-  tester.equal(cppRlp, rlpAccount.toString("hex"));
+  expect(cppRlp).toBe(rlpAccount.toString("hex"));
 
-  it("shall match the root", (t) => {
+  test("shall match the root", () => {
     trie4.put(g, rlpAccount, () => {
       trie4.put(j, rlpAccount, () => {
         trie4.put(v, rlpAccount, () => {
           trie4.put(a, rlpAccount, () => {
-            t.equal(trie4.root.toString("hex"), genesisStateRoot);
-            t.end();
+            expect(trie4.root.toString("hex")).toBe(genesisStateRoot);
           });
         });
       });

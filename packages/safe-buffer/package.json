@@ -2,10 +2,6 @@
   "name": "@w3n/safe-buffer",
   "description": "Safer Node.js Buffer API",
   "version": "5.1.2",
-  "devDependencies": {
-    "standard": "*",
-    "tape": "^4.0.0"
-  },
   "keywords": [
     "buffer",
     "buffer allocate",
@@ -19,6 +15,9 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "test": "standard && tape test/*.js"
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^23.1.0"
   }
 }

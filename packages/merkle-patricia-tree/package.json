@@ -3,7 +3,7 @@
   "description": "This is an implementation of the modified merkle patricia tree as speficed in the Ethereum's yellow paper.",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test:node && npm run test:browser",
+    "test": "jest",
     "prepublish": "npm run build",
     "test:browser": "karma start karma.conf.js",
     "test:node": "tape ./test/*.js",
@@ -28,16 +28,21 @@
     "semaphore": ">=1.0.1"
   },
   "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-jest": "^23.0.1",
+    "babel-preset-env": "^1.7.0",
     "browserify": "^13.0.0",
     "documentation": "^3.0.4",
     "ethereumjs-testing": "0.0.1",
     "istanbul": "^0.4.1",
+    "jest": "^23.1.0",
     "karma": "^1.7.1",
     "karma-browserify": "^5.0.0",
     "karma-chrome-launcher": "^2.2.0",
     "karma-detect-browsers": "^2.0.2",
     "karma-env-preprocessor": "^0.1.1",
     "karma-firefox-launcher": "^1.0.1",
-    "karma-tap": "^1.0.3"
+    "karma-tap": "^1.0.3",
+    "regenerator-runtime": "^0.11.1"
   }
 }

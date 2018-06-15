@@ -1,5 +1,4 @@
 const async = require("async");
-const tape = require("tape");
 const Trie = require("../secure.js");
 
 const trie = new Trie();
@@ -28,7 +27,7 @@ const fk = Buffer.from("a94f5374fce5edbc8e2a8697c15331677e6ebf0b", "hex");
 const g = Buffer.from("f8488084535500b1a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a0a155280bc3c09fd31b0adebbdd4ef3d5128172c0d2008be964dc9e10e0f0fedf", "hex");
 const gk = Buffer.from("095e7baea6a6c7c4c2dfeb977efac326af552d87", "hex");
 
-tape("secure tests shouldnt crash ", (t) => {
+test("secure tests shouldnt crash ", () => {
   async.series([
 
     function (done) {
@@ -65,6 +64,5 @@ tape("secure tests shouldnt crash ", (t) => {
       trie.put(gk, g, done);
     }
   ], () => {
-    t.end();
   });
 });

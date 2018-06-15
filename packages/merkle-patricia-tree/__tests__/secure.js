@@ -1,12 +1,11 @@
 const async = require("async");
-const tape = require("tape");
 const jsonTests = require("ethereumjs-testing").tests.trieTests.trietest_secureTrie;
 const Trie = require("../secure.js");
 
 let trie = new Trie();
 
-tape("secure tests", (it) => {
-  it.test("empty values", (t) => {
+describe("secure tests", () => {
+  test("empty values", () => {
     async.eachSeries(jsonTests.emptyValues.in, (row, cb) => {
       trie.put(Buffer.from(row[0]), row[1], cb);
     }, (err) => {
@@ -15,7 +14,7 @@ tape("secure tests", (it) => {
     });
   });
 
-  it.test("branchingTests", (t) => {
+  test("branchingTests", () => {
     trie = new Trie();
     async.eachSeries(jsonTests.branchingTests.in, (row, cb) => {
       trie.put(row[0], row[1], cb);
@@ -25,7 +24,7 @@ tape("secure tests", (it) => {
     });
   });
 
-  it.test("jeff", (t) => {
+  test("jeff", () => {
     async.eachSeries(jsonTests.jeff.in, (row, cb) => {
       let val = row[1];
 
