@@ -1,8 +1,12 @@
 // const testing = require('ethereumjs-testing')
 const utils = require("ethereumjs-util");
-const tape = require("tape");
 const Block = require("..");
 
+const hardforkTestData = {
+  chainstart: require("./difficultyFrontier.json"),
+  homestead: require("./difficultyHomestead.json"),
+  byzantium: require("./difficultyByzantium.json")
+};
 const BN = utils.BN;
 
 function normalize (data) {
@@ -13,72 +17,80 @@ function normalize (data) {
   });
 }
 
-tape("[Header]: difficulty tests", (t) => {
-  function runDifficultyTests (test, parentBlock, block, msg) {
-    normalize(test);
+describe("[Header]: difficulty tests", () => {
+  test("hard fork", () => {
+    for (const hardfork in hardforkTestData) {
+      const testData = hardforkTestData[hardfork];
 
-    const dif = block.header.canonicalDifficulty(parentBlock);
+      for (const testName in testData) {
+        const test = testData[testName];
+        const parentBlock = new Block(null, {
+          chain: "mainnet",
+          hardfork
+        });
 
-    t.equal(dif.toString(), test.currentDifficulty.toString(), `test canonicalDifficulty (${msg})`);
-    t.assert(block.header.validateDifficulty(parentBlock), `test validateDifficulty (${msg})`);
-  }
+        parentBlock.header.timestamp = test.parentTimestamp;
+        parentBlock.header.difficulty = test.parentDifficulty;
+        parentBlock.header.uncleHash = test.parentUncles;
 
-  const hardforkTestData = {
-    chainstart: require("./difficultyFrontier.json"),
-    homestead: require("./difficultyHomestead.json"),
-    byzantium: require("./difficultyByzantium.json")
-  };
+        const block = new Block(null, {
+          chain: "mainnet",
+          hardfork
+        });
 
-  for (const hardfork in hardforkTestData) {
-    const testData = hardforkTestData[hardfork];
+        block.header.timestamp = test.currentTimestamp;
+        block.header.difficulty = test.currentDifficulty;
+        block.header.number = test.currentBlockNumber;
 
-    for (const testName in testData) {
-      const test = testData[testName];
-      const parentBlock = new Block(null, {chain: "mainnet",
-        hardfork});
+        normalize(test);
 
-      parentBlock.header.timestamp = test.parentTimestamp;
-      parentBlock.header.difficulty = test.parentDifficulty;
-      parentBlock.header.uncleHash = test.parentUncles;
+        const dif = block.header.canonicalDifficulty(parentBlock);
 
-      const block = new Block(null, {chain: "mainnet",
-        hardfork});
+        // canonicalDifficulty fork determination by hardfork param
 
-      block.header.timestamp = test.currentTimestamp;
-      block.header.difficulty = test.currentDifficulty;
-      block.header.number = test.currentBlockNumber;
+        expect(dif.toString()).toBe(test.currentDifficulty.toString());
 
-      runDifficultyTests(test, parentBlock, block, "fork determination by hardfork param");
+        // validateDifficulty fork determination by hardfork param
+        expect(block.header.validateDifficulty(parentBlock)).toBe(true);
+      }
     }
-  }
+  });
 
-  const chainTestData = {
-    mainnet: require("./difficultyMainNetwork.json"),
-    ropsten: require("./difficultyRopsten.json")
-  };
+  test("chain", () => {
+    const chainTestData = {
+      mainnet: require("./difficultyMainNetwork.json"),
+      ropsten: require("./difficultyRopsten.json")
+    };
 
-  for (const chain in chainTestData) {
-    const testData = chainTestData[chain];
+    for (const chain in chainTestData) {
+      const testData = chainTestData[chain];
 
-    for (const testName in testData) {
-      const test = testData[testName];
-      const parentBlock = new Block(null, {chain});
+      for (const testName in testData) {
+        const test = testData[testName];
+        const parentBlock = new Block(null, {chain});
 
-      parentBlock.header.timestamp = test.parentTimestamp;
-      parentBlock.header.difficulty = test.parentDifficulty;
-      parentBlock.header.uncleHash = test.parentUncles;
+        parentBlock.header.timestamp = test.parentTimestamp;
+        parentBlock.header.difficulty = test.parentDifficulty;
+        parentBlock.header.uncleHash = test.parentUncles;
 
-      const block = new Block(null, {chain});
+        const block = new Block(null, {chain});
 
-      block.header.timestamp = test.currentTimestamp;
-      block.header.difficulty = test.currentDifficulty;
-      block.header.number = test.currentBlockNumber;
+        block.header.timestamp = test.currentTimestamp;
+        block.header.difficulty = test.currentDifficulty;
+        block.header.number = test.currentBlockNumber;
+        normalize(test);
 
-      runDifficultyTests(test, parentBlock, block, "fork determination by block number");
+        const dif = block.header.canonicalDifficulty(parentBlock);
+
+        // canonicalDifficulty fork determination by block number
+
+        expect(dif.toString()).toBe(test.currentDifficulty.toString());
+
+        // validateDifficulty fork determination by block number
+        expect(block.header.validateDifficulty(parentBlock)).toBe(true);
+      }
     }
-  }
-
-  t.end();
+  });
 
   // Temporarily run local test selection
   // also: implicit testing through ethereumjs-vm tests

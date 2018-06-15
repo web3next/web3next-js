@@ -1,4 +1,3 @@
-const tape = require("tape");
 const Common = require("ethereumjs-common");
 const utils = require("ethereumjs-util");
 
@@ -7,87 +6,89 @@ const testing = require("ethereumjs-testing");
 const Header = require("../header.js");
 const Block = require("..");
 
-tape("[Block]: Header functions", (t) => {
-  t.test("should create with default constructor", (st) => {
-    function compareDefaultHeader (st, header) {
-      st.deepEqual(header.parentHash, utils.zeros(32));
-      st.equal(header.uncleHash.toString("hex"), utils.SHA3_RLP_ARRAY_S);
-      st.deepEqual(header.coinbase, utils.zeros(20));
-      st.deepEqual(header.stateRoot, utils.zeros(32));
-      st.equal(header.transactionsTrie.toString("hex"), utils.SHA3_RLP_S);
-      st.equal(header.receiptTrie.toString("hex"), utils.SHA3_RLP_S);
-      st.deepEqual(header.bloom, utils.zeros(256));
-      st.deepEqual(header.difficulty, Buffer.from([]));
-      st.deepEqual(header.number, utils.intToBuffer(1150000));
-      st.deepEqual(header.gasLimit, Buffer.from("ffffffffffffff", "hex"));
-      st.deepEqual(header.gasUsed, Buffer.from([]));
-      st.deepEqual(header.timestamp, Buffer.from([]));
-      st.deepEqual(header.extraData, Buffer.from([]));
-      st.deepEqual(header.mixHash, utils.zeros(32));
-      st.deepEqual(header.nonce, utils.zeros(8));
-    }
+describe("[Block]: Header functions", () => {
+  test("should create with default constructor", () => {
+    const compareDefaultHeader = (header) => {
+      expect(header.parentHash).toEqual(utils.zeros(32));
+      expect(header.uncleHash.toString("hex")).toBe(utils.SHA3_RLP_ARRAY_S);
+      expect(header.coinbase).toEqual(utils.zeros(20));
+      expect(header.stateRoot).toEqual(utils.zeros(32));
+      expect(header.transactionsTrie.toString("hex")).toBe(utils.SHA3_RLP_S);
+      expect(header.receiptTrie.toString("hex")).toBe(utils.SHA3_RLP_S);
+      expect(header.bloom).toEqual(utils.zeros(256));
+      expect(header.difficulty).toEqual(Buffer.from([]));
+      expect(header.number).toEqual(utils.intToBuffer(1150000));
+      expect(header.gasLimit).toEqual(Buffer.from("ffffffffffffff", "hex"));
+      expect(header.gasUsed).toEqual(Buffer.from([]));
+      expect(header.timestamp).toEqual(Buffer.from([]));
+      expect(header.extraData).toEqual(Buffer.from([]));
+      expect(header.mixHash).toEqual(utils.zeros(32));
+      expect(header.nonce).toEqual(utils.zeros(8));
+    };
 
     let header = new Header();
 
-    compareDefaultHeader(st, header);
+    compareDefaultHeader(header);
 
     const block = new Block();
 
     header = block.header;
-    compareDefaultHeader(st, header);
-
-    st.end();
+    compareDefaultHeader(header);
   });
 
-  t.test("should test header initialization", (st) => {
+  test("should test header initialization", () => {
     const header1 = new Header(null, {chain: "ropsten"});
     const common = new Common("ropsten");
     const header2 = new Header(null, {common});
 
     header1.setGenesisParams();
     header2.setGenesisParams();
-    st.strictEqual(header1.hash().toString("hex"), header2.hash().toString("hex"), "header hashes match");
 
-    st.throws(function () { new Header(null, { 'chain': 'ropsten', 'common': common }) }, /not allowed!$/, 'should throw on initialization with chain and common parameter') // eslint-disable-line
-    st.end();
+    // header hashes match
+    expect(header1.hash().toString("hex")).toBe(header2.hash().toString("hex"));
+
+    // should throw on initialization with chain and common parameter
+    expect(() => {
+      new Header(null, {chain: "ropsten",
+        common});
+    }).toThrow();
   });
 
-  t.test("should test validateGasLimit", (st) => {
+  test("should test validateGasLimit", () => {
     const testData = testing.getSingleFile("BlockchainTests/bcBlockGasLimitTest.json");
 
     const parentBlock = new Block(rlp.decode(testData.BlockGasLimit2p63m1.genesisRLP));
     const block = new Block(rlp.decode(testData.BlockGasLimit2p63m1.blocks[0].rlp));
 
-    st.equal(block.header.validateGasLimit(parentBlock), true);
-    st.end();
+    expect(block.header.validateGasLimit(parentBlock)).toBe(true);
   });
 
-  t.test("should test isGenesis", (st) => {
+  test("should test isGenesis", () => {
     const header = new Header();
 
-    st.equal(header.isGenesis(), false);
+    expect(header.isGenesis()).toBe(false);
     header.number = Buffer.from([]);
-    st.equal(header.isGenesis(), true);
-    st.end();
+    expect(header.isGenesis()).toBe(true);
   });
 
   const testDataGenesis = testing.getSingleFile("BasicTests/genesishashestest.json");
 
-  t.test("should test genesis hashes (mainnet default)", (st) => {
+  test("should test genesis hashes (mainnet default)", () => {
     const header = new Header();
 
     header.setGenesisParams();
-    st.strictEqual(header.hash().toString("hex"), testDataGenesis.genesis_hash, "genesis hash match");
-    st.end();
+
+    // genesis hash match
+    expect(header.hash().toString("hex")).toBe(testDataGenesis.genesis_hash);
   });
 
-  t.test("should test genesis parameters (ropsten)", (st) => {
+  test("should test genesis parameters (ropsten)", () => {
     const genesisHeader = new Header(null, {chain: "ropsten"});
 
     genesisHeader.setGenesisParams();
     const ropstenStateRoot = "217b0bbcfb72e2d57e28f33cb361b9983513177755dc3f33ce3e7022ed62b77b";
 
-    st.strictEqual(genesisHeader.stateRoot.toString("hex"), ropstenStateRoot, "genesis stateRoot match");
-    st.end();
+    // genesis stateRoot match
+    expect(genesisHeader.stateRoot.toString("hex")).toBe(ropstenStateRoot);
   });
 });
