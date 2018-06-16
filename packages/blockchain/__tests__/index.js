@@ -1,4 +1,4 @@
-const test = require("tape");
+/* eslint-disable promise/prefer-await-to-callbacks, import/no-commonjs */
 const Blockchain = require("..");
 const Block = require("ethereumjs-block");
 const async = require("async");
@@ -8,22 +8,37 @@ const memdown = require("memdown");
 const BN = require("bn.js");
 const testData = require("./testdata.json");
 
-test("blockchain test", (t) => {
-  t.plan(59);
+const isConsecutive = (blocks) => {
+  let _isConsecutive = true;
+
+  blocks.some((block, index) => {
+    if (index === 0) {
+      return false;
+    }
+    if (Buffer.compare(block.header.parentHash, blocks[index - 1].hash()) !== 0) {
+      _isConsecutive = false;
+
+      return true;
+    }
+  });
+
+  return _isConsecutive;
+};
+
+test("blockchain test", () => {
   const blockchain = new Blockchain();
   let genesisBlock;
   const blocks = [];
   let forkBlock;
 
   blockchain.validate = false;
-  async.series([
+  const p = new Promise((resolve, reject) => async.series([
 
     function (done) {
       blockchain.getHead((err, head) => {
         if (err) {
           return done(err);
         }
-        t.ok(true, "should not crash on getting head of a blockchain without a genesis");
         done();
       });
     },
@@ -31,11 +46,19 @@ test("blockchain test", (t) => {
       const db = levelup("", {db: memdown});
       let blockchain = new Blockchain(db);
 
-      t.equals(db, blockchain.db, "support constructor with db parameter");
-      blockchain = new Blockchain({detailsDb: db,
-        blockDb: db});
-      t.equals(db, blockchain.db, "support blockDb and detailsDb params");
-      t.notOk(blockchain.detailsDb, "ignore detailsDb param");
+      // support constructor with db parameter
+
+      expect(db).toEqual(blockchain.db);
+      blockchain = new Blockchain({
+        detailsDb: db,
+        blockDb: db
+      });
+
+      // support blockDb and detailsDb params
+      expect(db).toEqual(blockchain.db);
+
+      // ignore detailsDb param
+      expect(blockchain.detailsDb).toBeFalsy();
       done();
     },
     function addgenesis (done) {
@@ -45,7 +68,9 @@ test("blockchain test", (t) => {
         if (err) {
           return done(err);
         }
-        t.equals(genesisBlock.hash().toString("hex"), blockchain.meta.genesis.toString("hex"), "genesis block hash should be correct");
+
+        // genesis block hash should be correct
+        expect(genesisBlock.hash().toString("hex")).toBe(blockchain.meta.genesis.toString("hex"));
         blocks.push(genesisBlock);
         done();
       });
@@ -56,7 +81,8 @@ test("blockchain test", (t) => {
       badBlock.header.number = Buffer.from([]);
       blockchain.validate = true;
       blockchain.putBlock(badBlock, (err) => {
-        t.ok(err, "should not validate a block incorrectly flagged as genesis");
+        // should not validate a block incorrectly flagged as genesis
+        expect(err).toBeTruthy();
         blockchain.validate = false;
         done();
       }, false);
@@ -76,7 +102,8 @@ test("blockchain test", (t) => {
           blocks.push(block);
 
           if (blocks.length === 10) {
-            t.ok(true, "added 10 blocks");
+            // added 10 blocks
+            expect(true).toBeTruthy();
             done();
           } else {
             addNextBlock(blockNumber + 1);
@@ -90,7 +117,9 @@ test("blockchain test", (t) => {
         if (err) {
           return done(err);
         }
-        t.equals(block.hash().toString("hex"), blocks[1].hash().toString("hex"), "should get block by number");
+
+        // should get block by number
+        expect(block.hash().toString("hex")).toBe(blocks[1].hash().toString("hex"));
         done();
       });
     },
@@ -99,7 +128,9 @@ test("blockchain test", (t) => {
         if (err) {
           return done(err);
         }
-        t.equals(block.hash().toString("hex"), genesisBlock.hash().toString("hex"), "should get block by hash");
+
+        // should get block by hash
+        expect(block.hash().toString("hex")).toBe(genesisBlock.hash().toString("hex"));
         done();
       });
     },
@@ -109,8 +140,12 @@ test("blockchain test", (t) => {
         if (err) {
           return done(err);
         }
-        t.equals(blocks.length, 5, "should get 5 blocks");
-        t.ok(isConsecutive(blocks), "blocks should be consecutive");
+
+        // should get 5 blocks
+        expect(blocks.length).toBe(5);
+
+        // blocks should be consecutive
+        expect(isConsecutive(blocks)).toBeTruthy();
         done();
       });
     },
@@ -120,8 +155,12 @@ test("blockchain test", (t) => {
         if (err) {
           return done(err);
         }
-        t.equals(blocks.length, 5, "should get 5 blocks");
-        t.ok(!isConsecutive(blocks), "blocks should not be consecutive");
+
+        // should get 5 blocks
+        expect(blocks.length).toBe(5);
+
+        // blocks should not be consecutive
+        expect(!isConsecutive(blocks)).toBeTruthy();
         done();
       });
     },
@@ -131,8 +170,12 @@ test("blockchain test", (t) => {
         if (err) {
           return done(err);
         }
-        t.equals(blocks.length, 4, "should get 4 blocks");
-        t.ok(!isConsecutive(blocks), "blocks should not be consecutive");
+
+        // should get 4 blocks
+        expect(blocks.length).toBe(4);
+
+        // blocks should not be consecutive
+        expect(!isConsecutive(blocks)).toBeTruthy();
         done();
       });
     },
@@ -142,8 +185,12 @@ test("blockchain test", (t) => {
         if (err) {
           return done(err);
         }
-        t.equals(blocks.length, 10, "should get 10 blocks");
-        t.ok(isConsecutive(blocks), "blocks should be consecutive");
+
+        // should get 10 blocks
+        expect(blocks.length).toBe(10);
+
+        // blocks should be consecutive
+        expect(isConsecutive(blocks)).toBeTruthy();
         done();
       });
     },
@@ -153,8 +200,12 @@ test("blockchain test", (t) => {
         if (err) {
           return done(err);
         }
-        t.equals(blocks.length, 5, "should get 5 blocks");
-        t.ok(isConsecutive(blocks), "blocks should be consecutive");
+
+        // should get 5 blocks
+        expect(blocks.length).toBe(5);
+
+        // blocks should be consecutive
+        expect(isConsecutive(blocks)).toBeTruthy();
         done();
       });
     },
@@ -164,8 +215,12 @@ test("blockchain test", (t) => {
         if (err) {
           return done(err);
         }
-        t.equals(blocks.length, 5, "should get 5 blocks");
-        t.ok(!isConsecutive(blocks), "blocks should not be consecutive");
+
+        // should get 5 blocks
+        expect(blocks.length).toBe(5);
+
+        // blocks should not be consecutive
+        expect(!isConsecutive(blocks)).toBeTruthy();
         done();
       });
     },
@@ -175,8 +230,12 @@ test("blockchain test", (t) => {
         if (err) {
           return done(err);
         }
-        t.equals(blocks.length, 4, "should get 4 blocks");
-        t.ok(!isConsecutive(blocks), "blocks should not be consecutive");
+
+        // should get 4 blocks
+        expect(blocks.length).toBe(4);
+
+        // blocks should not be consecutive
+        expect(!isConsecutive(blocks)).toBeTruthy();
         done();
       });
     },
@@ -186,8 +245,12 @@ test("blockchain test", (t) => {
         if (err) {
           return done(err);
         }
-        t.equals(blocks.length, 10, "should get 10 blocks");
-        t.ok(isConsecutive(blocks), "blocks should be consecutive");
+
+        // should get 10 blocks
+        expect(blocks.length).toBe(10);
+
+        // blocks should be consecutive
+        expect(isConsecutive(blocks)).toBeTruthy();
         done();
       });
     },
@@ -197,8 +260,9 @@ test("blockchain test", (t) => {
         if (err) {
           return done(err);
         }
-        t.equals(blocks.length, 5, "should get 5 blocks");
-        t.ok(isConsecutive(blocks), "blocks should be consecutive");
+
+        expect(blocks.length).toBe(5)
+        expect(isConsecutive(blocks)).toBeTruthy();
         done();
       });
     },
@@ -208,8 +272,9 @@ test("blockchain test", (t) => {
         if (err) {
           return done(err);
         }
-        t.equals(blocks.length, 5, "should get 5 blocks");
-        t.ok(isConsecutive(blocks.reverse()), "blocks should be consecutive");
+        expect(blocks.length).toBe(5)
+        expect(isConsecutive(blocks.reverse())).toBeTruthy()
+
         done();
       });
     },
@@ -219,8 +284,8 @@ test("blockchain test", (t) => {
         if (err) {
           return done(err);
         }
-        t.equals(blocks.length, 6, "should get 6 blocks");
-        t.ok(isConsecutive(blocks.reverse()), "blocks should be consecutive");
+        expect(blocks.length).toBe(6)
+        expect(isConsecutive(blocks.reverse())).toBeTruthy()
         done();
       });
     },
@@ -230,8 +295,8 @@ test("blockchain test", (t) => {
         if (err) {
           return done(err);
         }
-        t.equals(blocks.length, 3, "should get 3 blocks");
-        t.ok(!isConsecutive(blocks.reverse()), "blocks should not be consecutive");
+        expect(blocks.length).toBe(3)
+        expect(isConsecutive(blocks.reverse())).toBeFalsy()
         done();
       });
     },
@@ -246,7 +311,8 @@ test("blockchain test", (t) => {
         if (err) {
           return done(err);
         }
-        t.equals(hashes[0].toString("hex"), neededHash.toString("hex"), "should find needed hash");
+         // should find needed hash
+        expect(hashes[0].toString("hex")).toBe(neededHash.toString("hex"))
         done();
       });
     },
@@ -259,7 +325,8 @@ test("blockchain test", (t) => {
         }
         cb();
       }, () => {
-        t.equals(i, 9, "should iterate through 9 blocks");
+        // should iterate through 9 blocks
+        expect(i).toBe( 9)
         done();
       });
     },
@@ -268,17 +335,17 @@ test("blockchain test", (t) => {
 
       blockchain.validate = false;
       blockchain.iterator("test", () => {
-        t.ok(false, "should not call iterator function");
         done();
       }, () => {
-        t.ok(true, "should finish iterating");
         done();
       });
     },
     function getMeta (done) {
-      t.equals(blockchain.meta.rawHead.toString("hex"), blocks[9].hash().toString("hex"), "should get meta.rawHead");
-      t.equals(blockchain.meta.genesis.toString("hex"), genesisBlock.hash().toString("hex"), "should get meta.genesis");
-      t.ok(blockchain.meta.heads.test, "should get meta.heads");
+      // should get meta.rawHead
+      expect(blockchain.meta.rawHead.toString("hex")).toBe(blocks[9].hash().toString("hex"))
+      // should get meta.genesis"
+      expect(blockchain.meta.genesis.toString("hex")).toBe(genesisBlock.hash().toString("hex"))
+      expect(blockchain.meta.heads.test).toBeTruthy()
       done();
     },
     function addForkBlockAndResetStaleHeads (done) {
@@ -288,15 +355,17 @@ test("blockchain test", (t) => {
       forkBlock.header.parentHash = blocks[8].hash();
       blockchain._heads.staletest = blockchain._headHeader;
       blockchain.putBlock(forkBlock, (err) => {
-        t.equals(blockchain._heads.staletest.toString("hex"), blocks[8].hash().toString("hex"), "should update stale head");
-        t.notOk(err, "should add new block in fork");
+        expect(blockchain._heads.staletest.toString("hex")).toBe(blocks[8].hash().toString("hex"));
+        expect(err).toBeFalsy();
         done();
       });
     },
     function delForkBlock (done) {
+
       blockchain.delBlock(forkBlock.hash(), (err) => {
-        t.ok(!err, "should delete fork block");
-        t.equals(blockchain._headHeader.toString("hex"), blocks[8].hash().toString("hex"), "should not change head");
+        expect(err).toBeFalsy();
+         // should not change head
+        expect(blockchain._headHeader.toString("hex")).toBe(blocks[8].hash().toString("hex"));
         done();
       });
     },
@@ -315,21 +384,26 @@ test("blockchain test", (t) => {
         });
       }
       delNextBlock(9, (err) => {
-        t.ok(!err, "should delete blocks in canonical chain");
-        t.equals(blockchain._headHeader.toString("hex"), blocks[5].hash().toString("hex"), "should have block 5 as head");
+        // should delete blocks in canonical chain
+        expect(err).toBeFalsy()
+        // should have block 5 as head
+        expect(blockchain._headHeader.toString("hex")).toBe(blocks[5].hash().toString("hex"));
         done();
       });
     },
     function delBlockAndChildren (done) {
       blockchain.delBlock(blocks[1].hash(), (err) => {
-        t.ok(!err, "should delete block and children");
-        t.equals(blockchain._headHeader.toString("hex"), genesisBlock.hash().toString("hex"), "should have genesis as head");
+        // should delete block and children
+        expect(err).toBeFalsy()
+        // should have genesis as head
+        expect(blockchain._headHeader.toString("hex")).toBe(genesisBlock.hash().toString("hex"));
         done();
       });
     },
     function putBlocks (done) {
       blockchain.putBlocks(blocks.slice(1), (err) => {
-        t.ok(!err, "should put multiple blocks at once");
+        // should put multiple blocks at once
+        expect(err).toBeFalsy()
         done();
       });
     },
@@ -344,8 +418,10 @@ test("blockchain test", (t) => {
           if (err) {
             return done(err);
           }
-          t.equals(head.hash().toString("hex"), genesis.hash().toString("hex"), "should get head");
-          t.equals(blockchain._heads.head0.toString("hex"), "abcd", "should get state root heads");
+          // should get head
+          expect(head.hash().toString("hex")).toBe(genesis.hash().toString("hex"))
+          // should get state root heads
+          expect(blockchain._heads.head0.toString("hex")).toBe( "abcd")
           done();
         });
       });
@@ -356,11 +432,13 @@ test("blockchain test", (t) => {
 
       genesisBlock.setGenesisParams();
       blockchain.putGenesis(genesisBlock, (err) => {
-        t.notOk(err, "should validate genesisBlock");
+        // should validate genesisBlock
+        expect(err).toBeFalsy()
         const invalidBlock = new Block();
 
         blockchain.putBlock(invalidBlock, (err) => {
-          t.ok(err, "should not validate an invalid block");
+          // should not validate an invalid block
+          expect(err).toBeTruthy();
           done();
         });
       });
@@ -379,7 +457,8 @@ test("blockchain test", (t) => {
           if (err) {
             return done(err);
           }
-          t.notOk(err, "should add block with a body");
+          // should add block with a body
+          expect(err).toBeFalsy()
           done();
         });
       });
@@ -394,19 +473,22 @@ test("blockchain test", (t) => {
         async.series([
           (cb) => {
             return blockchain._hashToNumber(genesisBlock.hash(), (err, number) => {
-              t.equals(number.toString(10), "0", "should perform _hashToNumber correctly");
+              // should perform _hashToNumber correctly
+              expect(number.toString(10)).toBe("0")
               cb(err);
             });
           },
           (cb) => {
             return blockchain._numberToHash(new BN(0), (err, hash) => {
-              t.equals(genesisBlock.hash().toString("hex"), hash.toString("hex"), "should perform _numberToHash correctly");
+              // should perform _numberToHash correctly
+              expect(genesisBlock.hash().toString("hex")).toBe(hash.toString("hex"))
               cb(err);
             });
           },
           (cb) => {
             return blockchain._getTd(genesisBlock.hash(), new BN(0), (err, td) => {
-              t.equals(td.toBuffer().toString("hex"), genesis.header.difficulty.toString("hex"), "should perform _getTd correctly");
+              // should perform _getTd correctly
+              expect(td.toBuffer().toString("hex")).toBe(genesis.header.difficulty.toString("hex"));
               cb(err);
             });
           }
@@ -415,22 +497,27 @@ test("blockchain test", (t) => {
     },
     function saveHeads (done) {
       const db = levelup("", {db: memdown});
-      let blockchain = new Blockchain({db,
-        validate: false});
+      let blockchain = new Blockchain({
+        db,
+        validate: false
+      });
 
       blockchain.putBlock(blocks[1], (err) => {
         if (err) {
           return done(err);
         }
-        blockchain = new Blockchain({db,
-          validate: false});
+        blockchain = new Blockchain({
+          db,
+          validate: false
+        });
         async.series([
           (cb) => {
             return blockchain.getLatestHeader((err, header) => {
               if (err) {
                 return done(err);
               }
-              t.equals(header.hash().toString("hex"), blocks[1].hash().toString("hex"), "should get latest header");
+              // should get latest header
+              expect(header.hash().toString("hex")).toBe(blocks[1].hash().toString("hex"))
               cb();
             });
           },
@@ -439,7 +526,8 @@ test("blockchain test", (t) => {
               if (err) {
                 return done(err);
               }
-              t.equals(headBlock.hash().toString("hex"), blocks[1].hash().toString("hex"), "should get latest block");
+              // should get latest block
+              expect(headBlock.hash().toString("hex")).toBe(blocks[1].hash().toString("hex"))
               cb();
             });
           }
@@ -447,30 +535,14 @@ test("blockchain test", (t) => {
       });
     }
   ], (err) => {
-    if (err) {
-      t.ok(false, err);
-    } else {
-      t.ok(true, "no errors");
+    if (!err) {
+      resolve(true);
+    }else {
+      reject(err)
     }
-  });
+  }))
+  return expect(p).resolves.toBe(true);
 });
-
-function isConsecutive (blocks) {
-  let isConsecutive = true;
-
-  blocks.some((block, index) => {
-    if (index === 0) {
-      return false;
-    }
-    if (Buffer.compare(block.header.parentHash, blocks[index - 1].hash()) !== 0) {
-      isConsecutive = false;
-
-      return true;
-    }
-  });
-
-  return isConsecutive;
-}
 
 function createTestDB (cb) {
   const genesis = new Block();
