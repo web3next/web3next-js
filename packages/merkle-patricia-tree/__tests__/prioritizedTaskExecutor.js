@@ -1,3 +1,5 @@
+/* eslint-disable promise/prefer-await-to-callbacks, import/no-commonjs, import/unambiguous */
+
 const PrioritizedTaskExecutor = require("../prioritizedTaskExecutor.js");
 
 const taskExecutor = new PrioritizedTaskExecutor(2);

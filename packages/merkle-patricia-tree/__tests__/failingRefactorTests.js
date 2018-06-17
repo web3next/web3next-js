@@ -1,5 +1,6 @@
-const async = require("async");
-const Trie = require("../secure.js");
+/* eslint-disable promise/prefer-await-to-callbacks, import/no-commonjs, import/unambiguous, max-len */
+
+const Trie = require("../secure.js").default;
 
 const trie = new Trie();
 const a = Buffer.from("f8448080a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a0a155280bc3c09fd31b0adebbdd4ef3d5128172c0d2008be964dc9e10e0f0fedf", "hex");
@@ -27,42 +28,16 @@ const fk = Buffer.from("a94f5374fce5edbc8e2a8697c15331677e6ebf0b", "hex");
 const g = Buffer.from("f8488084535500b1a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a0a155280bc3c09fd31b0adebbdd4ef3d5128172c0d2008be964dc9e10e0f0fedf", "hex");
 const gk = Buffer.from("095e7baea6a6c7c4c2dfeb977efac326af552d87", "hex");
 
-test("secure tests shouldnt crash ", () => {
-  async.series([
-
-    function (done) {
-      console.log("done");
-      trie.put(ak, a, done);
-    },
-    function (done) {
-      trie.put(bk, b, done);
-    },
-    function (done) {
-      trie.put(ck, c, done);
-    },
-    function (done) {
-      trie.checkpoint();
-      trie.checkpoint();
-      done();
-    },
-    function (done) {
-      trie.commit(done);
-    },
-    function (done) {
-      trie.put(dk, d, done);
-    },
-    function (done) {
-      trie.put(ek, e, done);
-    },
-    function (done) {
-      trie.put(fk, f, done);
-    },
-    function (done) {
-      trie.commit(done);
-    },
-    function (done) {
-      trie.put(gk, g, done);
-    }
-  ], () => {
-  });
+test("secure tests shouldnt crash ", async () => {
+  await trie.put(ak, a);
+  await trie.put(bk, b);
+  await trie.put(ck, c);
+  trie.checkpoint();
+  trie.checkpoint();
+  await trie.commit();
+  await trie.put(dk, d);
+  await trie.put(ek, e);
+  await trie.put(fk, f);
+  await trie.commit();
+  await trie.put(gk, g);
 });
