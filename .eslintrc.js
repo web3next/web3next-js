@@ -45,6 +45,10 @@ module.exports = {
     ],
     "sort-keys": [
       "off"
+    ],
+    "arrow-body-style": [
+      "error",
+      "as-needed"
     ]
   }
 };
