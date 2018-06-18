@@ -1,10 +1,4 @@
 # SYNOPSIS 
-[![NPM Package](https://img.shields.io/npm/v/merkle-patricia-tree.svg?style=flat-square)](https://www.npmjs.org/package/merkle-patricia-tree)
-[![Build Status](https://img.shields.io/travis/ethereumjs/merkle-patricia-tree.svg?branch=master&style=flat-square)](https://travis-ci.org/ethereumjs/merkle-patricia-tree)
-[![Coverage Status](https://img.shields.io/coveralls/ethereumjs/merkle-patricia-tree.svg?style=flat-square)](https://coveralls.io/r/ethereumjs/merkle-patricia-tree)
-[![Gitter](https://img.shields.io/gitter/room/ethereum/ethereumjs-lib.svg?style=flat-square)](https://gitter.im/ethereum/ethereumjs-lib) or #ethereumjs on freenode  
-
-[![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)  
 
 This is an implementation of the modified merkle patricia tree as specified in the [Ethereum's yellow paper](http://gavwood.com/Paper.pdf).
 
@@ -21,29 +15,22 @@ The only backing store supported is LevelDB through the ```levelup``` module.
 ## Initialization and Basic Usage
 
 ```javascript
-var Trie = require('merkle-patricia-tree'),
-levelup = require('levelup'),
-db = levelup('./testdb'),
-trie = new Trie(db); 
+import Trie from 'merkle-patricia-tree';
+import levelup from 'levelup';
+const db = levelup('./testdb'),
+const trie = new Trie(db); 
 
-trie.put('test', 'one', function () {
-  trie.get('test', function (err, value) {
-    if(value) console.log(value.toString())
-  });
-});
+await trie.put('test', 'one');
+const value = async trie.get('test');
+console.log(value && value.toString());
 ```
 
 ## Merkle Proofs
 
 ```javascript
-Trie.prove(trie, 'test', function (err, prove) {
-  if (err) return cb(err)
-  Trie.verifyProof(trie.root, 'test', prove, function (err, value) {
-    if (err) return cb(err)
-    console.log(value.toString())
-    cb()
-  })
-})
+const prove = await Trie.prove(trie, 'test');
+const value = await Trie.verifyProof(trie.root, 'test', prove);
+console.log(value.toString())
 ```
 
 # API
