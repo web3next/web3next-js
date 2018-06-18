@@ -49,6 +49,9 @@ module.exports = {
     "arrow-body-style": [
       "error",
       "as-needed"
+    ],
+    "newline-after-var": [
+      "off"
     ]
   }
 };
