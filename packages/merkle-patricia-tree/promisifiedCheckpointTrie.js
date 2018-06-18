@@ -1,17 +1,14 @@
 import {promisify} from "es6-promisify";
-import BaseTrie from "./baseTrie";
-import checkpointInterface from "./checkpoint-interface";
+import levelup from "levelup";
+import memdown from "memdown";
+import async from "async";
+import {Readable} from "readable-stream";
+import levelws from "level-ws";
 import proof from "./proof";
-const levelup = require("levelup");
-const memdown = require("memdown");
-const async = require("async");
-const inherits = require("util").inherits;
-const Readable = require("readable-stream").Readable;
-const levelws = require("level-ws");
-const callTogether = require("./util").callTogether;
+import BaseTrie from "./baseTrie";
+import {callTogether} from "./util";
 
 export default class PromisifiedCheckpointTrie extends BaseTrie {
- 
   constructor (db, root) {
     super(db, root);
 
@@ -34,8 +31,6 @@ export default class PromisifiedCheckpointTrie extends BaseTrie {
     this.putRawNormalMode = promisify(super.putRaw);
     this.putRaw = this.putRawNormalMode;
   }
-
-
 
   get isCheckpoint () {
     return Boolean(this._checkpoints.length);
@@ -196,5 +191,5 @@ class ScratchReadStream extends Readable {
     }
   }
 }
-PromisifiedCheckpointTrie.prove = promisify(proof.prove)
-PromisifiedCheckpointTrie.verifyProof = promisify(proof.verifyProof)
+PromisifiedCheckpointTrie.prove = promisify(proof.prove);
+PromisifiedCheckpointTrie.verifyProof = promisify(proof.verifyProof);
