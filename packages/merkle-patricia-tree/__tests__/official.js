@@ -1,59 +1,48 @@
-const async = require("async");
-const jsonTests = require("ethereumjs-testing").tests.trieTests;
-const Trie = require("..");
+/* eslint-disable promise/prefer-await-to-callbacks, import/no-commonjs, import/unambiguous */
 
-test("official tests", () => {
-  let trie = new Trie();
+const jsonTests = require("ethereumjs-testing").tests.trieTests;
+const Trie = require("../promisifiedCheckpointTrie").default;
+
+const convert = (v) => {
+  if (v && v.startsWith("0x")) {
+    return Buffer.from(v.slice(2), "hex");
+  } else {
+    return v;
+  }
+};
+
+describe("official tests", () => {
   const testNames = Object.keys(jsonTests.trietest);
 
-  async.eachSeries(testNames, (i, done) => {
-    const inputs = jsonTests.trietest[i].in;
-    const expected = jsonTests.trietest[i].root;
-
-    async.eachSeries(inputs, (input, done) => {
-      for (i = 0; i < 2; i++) {
-        if (input[i] && input[i].slice(0, 2) === "0x") {
-          input[i] = Buffer.from(input[i].slice(2), "hex");
-        }
-      }
-
-      trie.put(Buffer.from(input[0]), input[1], () => {
-        done();
+  testNames.forEach((name) => {
+    test(name, async () => {
+      const inputs = jsonTests.trietest[name].in;
+      const expected = jsonTests.trietest[name].root;
+      const trie = new Trie();
+      const ps = inputs.map(([key, value]) => {
+        return trie.put(convert(key), convert(value));
       });
-    }, () => {
+      await Promise.all(ps);
       expect("0x" + trie.root.toString("hex")).toBe(expected);
-      trie = new Trie();
-      done();
     });
   });
 });
 
-test("official tests any order", () => {
+describe("official tests any order", () => {
   const testNames = Object.keys(jsonTests.trieanyorder);
-  let trie = new Trie();
 
-  async.eachSeries(testNames, (i, done) => {
-    const test = jsonTests.trieanyorder[i];
-    const keys = Object.keys(test.in);
+  testNames.forEach((name) => {
+    test(name, async () => {
+      const inputs = jsonTests.trieanyorder[name].in;
+      const expected = jsonTests.trieanyorder[name].root;
+      const trie = new Trie();
+      const ps = Object.keys(inputs).map((key) => {
+        const value = inputs[key];
 
-    async.eachSeries(keys, (key, done) => {
-      let val = test.in[key];
-
-      if (key.slice(0, 2) === "0x") {
-        key = Buffer.from(key.slice(2), "hex");
-      }
-
-      if (val && val.slice(0, 2) === "0x") {
-        val = Buffer.from(val.slice(2), "hex");
-      }
-
-      trie.put(Buffer.from(key), Buffer.from(val), () => {
-        done();
+        return trie.put(convert(key), convert(value));
       });
-    }, () => {
-      expect("0x" + trie.root.toString("hex")).toBe(test.root);
-      trie = new Trie();
-      done();
+      await Promise.all(ps);
+      expect("0x" + trie.root.toString("hex")).toBe(expected);
     });
   });
 });

@@ -1,3 +1,5 @@
+/* eslint-disable promise/prefer-await-to-callbacks, import/no-commonjs, import/unambiguous, max-len, id-match */
+
 const Trie = require("..");
 
 describe("kv stream test", () => {
@@ -83,7 +85,7 @@ describe("kv stream test", () => {
     trie.batch(init, () => {
       const stream = trie.createReadStream();
 
-      return expect(new Promise((resolve, reject) => {
+      return expect(new Promise((resolve) => {
         stream.on("data", (d) => {
           expect(valObj[d.key.toString()]).toBe(d.value.toString());
           delete valObj[d.key.toString()];
@@ -136,22 +138,20 @@ describe("db stream test", () => {
     };
 
     trie.checkpoint();
-    trie.batch(init, () => {
+    trie.batch(init, async () => {
       const stream = trie.createScratchReadStream();
 
-      return new Promise((resolve, reject) => {
+      const nodes = await new Promise((resolve) => {
         stream.on("data", (d) => {
           const key = d.key.toString("hex");
-
           expect(Boolean(expectedNodes[key])).toBeTruthy();
           delete expectedNodes[key];
         });
         stream.on("end", () => {
-          resolve(Object.keys(expectedNodes).length);
+          resolve(expectedNodes);
         });
-      }).then((l) => {
-        return expect(l).toBe(0);
       });
+      expect(Object.keys(nodes).length).toBe(0);
     });
   });
 });
