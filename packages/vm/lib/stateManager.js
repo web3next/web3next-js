@@ -1,10 +1,11 @@
 const Buffer = require('safe-buffer').Buffer
-const Trie = require('merkle-patricia-tree/secure.js')
+import Trie from '@w3n/merkle-patricia-tree/secure.js'
 const common = require('ethereum-common')
 const async = require('async')
 const Account = require('ethereumjs-account')
 const fakeBlockchain = require('./fakeBlockChain.js')
 const Cache = require('./cache.js')
+import { promisify } from 'es6-promisify'
 const utils = require('ethereumjs-util')
 const BN = utils.BN
 const rlp = utils.rlp
@@ -291,32 +292,29 @@ proto.dumpStorage = function (address, cb) {
   })
 }
 
-proto.hasGenesisState = function (cb) {
+proto.hasGenesisState = async function () {
   const root = common.genesisStateRoot.v
-  this.trie.checkRoot(root, cb)
+  await this.trie.checkRoot(root)
 }
 
-proto.generateCanonicalGenesis = function (cb) {
-  var self = this
+proto.generateCanonicalGenesis = async function () {
+  const genesis = await this.hasGenesisState();
+  if (!genesis) {
+    await this.generateGenesis(common.genesisState)
+  } else {
+    Promise.reject(err);
+  }
+};
 
-  this.hasGenesisState(function (err, genesis) {
-    if (!genesis && !err) {
-      self.generateGenesis(common.genesisState, cb)
-    } else {
-      cb(err)
-    }
-  })
-}
-
-proto.generateGenesis = function (initState, cb) {
-  var self = this
-  var addresses = Object.keys(initState)
-  async.eachSeries(addresses, function (address, done) {
-    var account = new Account()
+proto.generateGenesis = function (initState) {
+  const addresses = Object.keys(initState)
+  return addresses.reduce(async (p, address) => {
+    await p
+    const account = new Account()
     account.balance = new BN(initState[address]).toArrayLike(Buffer)
     address = Buffer.from(address, 'hex')
-    self.trie.put(address, account.serialize(), done)
-  }, cb)
+    return this.trie.put(address, account.serialize());
+  }, Promise.resolve()) 
 }
 
 proto.accountIsEmpty = function (address, cb) {
