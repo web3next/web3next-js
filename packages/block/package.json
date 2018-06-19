@@ -3,7 +3,7 @@
   "description": "Provides Block serialization and help functions",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test:node && npm run test:browser",
+    "test": "jest",
     "test:browser": "karma start karma.conf.js",
     "test:node": "node tests/index.js",
     "build:docs": "documentation build ./index.js ./header.js --format md --shallow > ./docs/index.md && documentation build ./from-rpc.js --format md --shallow  > ./docs/fromRpc.md"
@@ -20,13 +20,13 @@
     "merkle-patricia-tree": "^2.1.2"
   },
   "devDependencies": {
-    "babelify": "^8.0.0",
     "babel-preset-env": "^1.6.1",
+    "babelify": "^8.0.0",
     "browserify": "^15.0.0",
     "coveralls": "^2.11.6",
     "documentation": "4.0.0-beta16",
     "ethereumjs-testing": "~1.0.0",
-    "istanbul": "^0.4.2",
+    "jest": "^23.1.0",
     "karma": "^2.0.0",
     "karma-browserify": "^5.1.0",
     "karma-chrome-launcher": "^2.2.0",

@@ -1,63 +1,67 @@
 #!/usr/bin/env node
 
-const argv = require('minimist')(process.argv.slice(2))
-const async = require('async')
-const tape = require('tape')
-const testing = require('ethereumjs-testing')
-const FORK_CONFIG = argv.fork || 'Byzantium'
+const argv = require("minimist")(process.argv.slice(2));
+const async = require("async");
+const tape = require("tape");
+const testing = require("ethereumjs-testing");
+
+const FORK_CONFIG = argv.fork || "Byzantium";
+
 // tests which should be fixed
 const skipBroken = [
-  'CreateHashCollision', // impossible hash collision on generating address
-  'RecursiveCreateContracts',
-  'createJS_ExampleContract', // creates an account that already exsists
-  'CreateCollisionToEmpty', // temporary till fixed (2017-09-21)
-  'TransactionCollisionToEmptyButCode', // temporary till fixed (2017-09-21)
-  'TransactionCollisionToEmptyButNonce', // temporary till fixed (2017-09-21)
-  'RevertDepthCreateAddressCollision', // test case is wrong
-  'randomStatetest642' // BROKEN, rustbn.js error
-]
+  "CreateHashCollision", // impossible hash collision on generating address
+  "RecursiveCreateContracts",
+  "createJS_ExampleContract", // creates an account that already exsists
+  "CreateCollisionToEmpty", // temporary till fixed (2017-09-21)
+  "TransactionCollisionToEmptyButCode", // temporary till fixed (2017-09-21)
+  "TransactionCollisionToEmptyButNonce", // temporary till fixed (2017-09-21)
+  "RevertDepthCreateAddressCollision", // test case is wrong
+  "randomStatetest642" // BROKEN, rustbn.js error
+];
+
 // tests skipped due to system specifics / design considerations
 const skipPermanent = [
-  'SuicidesMixingCoinbase', // sucides to the coinbase, since we run a blockLevel we create coinbase account.
-  'static_SuicidesMixingCoinbase', // sucides to the coinbase, since we run a blockLevel we create coinbase account.
-  'ForkUncle', // Only BlockchainTest, correct behaviour unspecified (?)
-  'UncleFromSideChain' // Only BlockchainTest, same as ForkUncle, the TD is the same for two diffent branches so its not clear which one should be the finally chain
-]
+  "SuicidesMixingCoinbase", // sucides to the coinbase, since we run a blockLevel we create coinbase account.
+  "static_SuicidesMixingCoinbase", // sucides to the coinbase, since we run a blockLevel we create coinbase account.
+  "ForkUncle", // Only BlockchainTest, correct behaviour unspecified (?)
+  "UncleFromSideChain" // Only BlockchainTest, same as ForkUncle, the TD is the same for two diffent branches so its not clear which one should be the finally chain
+];
+
 // tests running slow (run from time to time)
 const skipSlow = [
-  'Call50000', // slow
-  'Call50000_ecrec', // slow
-  'Call50000_identity', // slow
-  'Call50000_identity2', // slow
-  'Call50000_sha256', // slow
-  'Call50000_rip160', // slow
-  'Call50000bytesContract50_1', // slow
-  'Call50000bytesContract50_2',
-  'Call1MB1024Calldepth', // slow
-  'static_Call1MB1024Calldepth', // slow
-  'static_Call50000', // slow
-  'static_Call50000_ecrec',
-  'static_Call50000_identity',
-  'static_Call50000_identity2',
-  'static_Call50000_rip160',
-  'static_Return50000_2',
-  'Callcode50000', // slow
-  'Return50000', // slow
-  'Return50000_2', // slow
-  'static_Call50000', // slow
-  'static_Call50000_ecrec', // slow
-  'static_Call50000_identity', // slow
-  'static_Call50000_identity2', // slow
-  'static_Call50000_sha256', // slow
-  'static_Call50000_rip160', // slow
-  'static_Call50000bytesContract50_1', // slow
-  'static_Call50000bytesContract50_2',
-  'static_Call1MB1024Calldepth', // slow
-  'static_Callcode50000', // slow
-  'static_Return50000', // slow
-  'static_Return50000_2', // slow
-  'QuadraticComplexitySolidity_CallDataCopy'
-]
+  "Call50000", // slow
+  "Call50000_ecrec", // slow
+  "Call50000_identity", // slow
+  "Call50000_identity2", // slow
+  "Call50000_sha256", // slow
+  "Call50000_rip160", // slow
+  "Call50000bytesContract50_1", // slow
+  "Call50000bytesContract50_2",
+  "Call1MB1024Calldepth", // slow
+  "static_Call1MB1024Calldepth", // slow
+  "static_Call50000", // slow
+  "static_Call50000_ecrec",
+  "static_Call50000_identity",
+  "static_Call50000_identity2",
+  "static_Call50000_rip160",
+  "static_Return50000_2",
+  "Callcode50000", // slow
+  "Return50000", // slow
+  "Return50000_2", // slow
+  "static_Call50000", // slow
+  "static_Call50000_ecrec", // slow
+  "static_Call50000_identity", // slow
+  "static_Call50000_identity2", // slow
+  "static_Call50000_sha256", // slow
+  "static_Call50000_rip160", // slow
+  "static_Call50000bytesContract50_1", // slow
+  "static_Call50000bytesContract50_2",
+  "static_Call1MB1024Calldepth", // slow
+  "static_Callcode50000", // slow
+  "static_Return50000", // slow
+  "static_Return50000_2", // slow
+  "QuadraticComplexitySolidity_CallDataCopy"
+];
 
 /*
 NOTE: VM tests have been disabled since they are generated using Frontier gas costs, and ethereumjs-vm doesn't support historical fork rules
@@ -75,183 +79,193 @@ ok 38985 valid gas usage
 
 const skipVM = [
   // slow performance tests
-  'loop-mul',
-  'loop-add-10M',
-  'loop-divadd-10M',
-  'loop-divadd-unr100-10M',
-  'loop-exp-16b-100k',
-  'loop-exp-1b-1M',
-  'loop-exp-2b-100k',
-  'loop-exp-32b-100k',
-  'loop-exp-4b-100k',
-  'loop-exp-8b-100k',
-  'loop-exp-nop-1M',
-  'loop-mulmod-2M',
+  "loop-mul",
+  "loop-add-10M",
+  "loop-divadd-10M",
+  "loop-divadd-unr100-10M",
+  "loop-exp-16b-100k",
+  "loop-exp-1b-1M",
+  "loop-exp-2b-100k",
+  "loop-exp-32b-100k",
+  "loop-exp-4b-100k",
+  "loop-exp-8b-100k",
+  "loop-exp-nop-1M",
+  "loop-mulmod-2M",
+
   // some VM tests fail because the js runner executes CALLs
   // see https://github.com/ethereum/tests/wiki/VM-Tests  > Since these tests are meant only as a basic test of VM operation, the CALL and CREATE instructions are not actually executed.
-  'ABAcalls0',
-  'ABAcallsSuicide0',
-  'ABAcallsSuicide1',
-  'sha3_bigSize',
-  'CallRecursiveBomb0',
-  'CallToNameRegistrator0',
-  'CallToPrecompiledContract',
-  'CallToReturn1',
-  'PostToNameRegistrator0',
-  'PostToReturn1',
-  'callcodeToNameRegistrator0',
-  'callcodeToReturn1',
-  'callstatelessToNameRegistrator0',
-  'callstatelessToReturn1',
-  'createNameRegistrator',
-  'randomTest643' // TODO fix this
-]
+  "ABAcalls0",
+  "ABAcallsSuicide0",
+  "ABAcallsSuicide1",
+  "sha3_bigSize",
+  "CallRecursiveBomb0",
+  "CallToNameRegistrator0",
+  "CallToPrecompiledContract",
+  "CallToReturn1",
+  "PostToNameRegistrator0",
+  "PostToReturn1",
+  "callcodeToNameRegistrator0",
+  "callcodeToReturn1",
+  "callstatelessToNameRegistrator0",
+  "callstatelessToReturn1",
+  "createNameRegistrator",
+  "randomTest643" // TODO fix this
+];
 
 if (argv.r) {
-  randomized(argv.r, argv.v)
+  randomized(argv.r, argv.v);
 } else if (argv.s) {
-  runTests('GeneralStateTests', argv)
+  runTests("GeneralStateTests", argv);
 } else if (argv.v) {
-  runTests('VMTests', argv)
+  runTests("VMTests", argv);
 } else if (argv.b) {
-  runTests('BlockchainTests', argv)
+  runTests("BlockchainTests", argv);
 } else if (argv.a) {
-  runAll()
+  runAll();
 }
 
 // randomized tests
 // returns 1 if the tests fails
 // returns 0 if the tests succeds
 function randomized (stateTest) {
-  const stateRunner = require('./stateRunner.js')
-  let errored = false
+  const stateRunner = require("./stateRunner.js");
+  let errored = false;
 
   tape.createStream({
     objectMode: true
-  }).on('data', function (row) {
+  }).on("data", (row) => {
     if (row.ok === false && !errored) {
-      errored = true
-      process.stdout.write('1')
-      process.exit()
+      errored = true;
+      process.stdout.write("1");
+      process.exit();
     }
-  }).on('end', function () {
-    process.stdout.write('0')
-  })
+  }).on("end", () => {
+    process.stdout.write("0");
+  });
 
   try {
-    stateTest = JSON.parse(stateTest)
+    stateTest = JSON.parse(stateTest);
   } catch (e) {
-    console.error('invalid json')
-    process.exit()
+    console.error("invalid json");
+    process.exit();
   }
 
-  var keys = Object.keys(stateTest)
-  stateTest = stateTest[keys[0]]
+  const keys = Object.keys(stateTest);
 
-  tape('', t => {
-    stateRunner({}, stateTest, t, t.end)
-  })
+  stateTest = stateTest[keys[0]];
+
+  tape("", (t) => {
+    stateRunner({}, stateTest, t, t.end);
+  });
 }
 
 function getSkipTests (choices, defaultChoice) {
-  let skipTests = []
+  let skipTests = [];
+
   if (!choices) {
-    choices = defaultChoice
+    choices = defaultChoice;
   }
-  choices = choices.toLowerCase()
-  if (choices !== 'none') {
-    let choicesList = choices.split(',')
-    let all = choicesList.includes('all')
-    if (all || choicesList.includes('broken')) {
-      skipTests = skipTests.concat(skipBroken)
+  choices = choices.toLowerCase();
+  if (choices !== "none") {
+    const choicesList = choices.split(",");
+    const all = choicesList.includes("all");
+
+    if (all || choicesList.includes("broken")) {
+      skipTests = skipTests.concat(skipBroken);
     }
-    if (all || choicesList.includes('permanent')) {
-      skipTests = skipTests.concat(skipPermanent)
+    if (all || choicesList.includes("permanent")) {
+      skipTests = skipTests.concat(skipPermanent);
     }
-    if (all || choicesList.includes('slow')) {
-      skipTests = skipTests.concat(skipSlow)
+    if (all || choicesList.includes("slow")) {
+      skipTests = skipTests.concat(skipSlow);
     }
   }
-  return skipTests
+
+  return skipTests;
 }
 
 function runTests (name, runnerArgs, cb) {
-  let testGetterArgs = {}
+  const testGetterArgs = {};
 
-  testGetterArgs.skipTests = getSkipTests(argv.skip, argv.runSkipped ? 'NONE' : 'ALL')
-  testGetterArgs.runSkipped = getSkipTests(argv.runSkipped, 'NONE')
-  testGetterArgs.skipVM = skipVM
-  testGetterArgs.forkConfig = FORK_CONFIG
-  testGetterArgs.file = argv.file
-  testGetterArgs.test = argv.test
-  testGetterArgs.dir = argv.dir
-  testGetterArgs.excludeDir = argv.excludeDir
-  testGetterArgs.testsPath = argv.testsPath
+  testGetterArgs.skipTests = getSkipTests(argv.skip, argv.runSkipped ? "NONE" : "ALL");
+  testGetterArgs.runSkipped = getSkipTests(argv.runSkipped, "NONE");
+  testGetterArgs.skipVM = skipVM;
+  testGetterArgs.forkConfig = FORK_CONFIG;
+  testGetterArgs.file = argv.file;
+  testGetterArgs.test = argv.test;
+  testGetterArgs.dir = argv.dir;
+  testGetterArgs.excludeDir = argv.excludeDir;
+  testGetterArgs.testsPath = argv.testsPath;
 
-  testGetterArgs.customStateTest = argv.customStateTest
+  testGetterArgs.customStateTest = argv.customStateTest;
 
-  runnerArgs.forkConfig = FORK_CONFIG
-  runnerArgs.jsontrace = argv.jsontrace
-  runnerArgs.debug = argv.debug // for BlockchainTests
+  runnerArgs.forkConfig = FORK_CONFIG;
+  runnerArgs.jsontrace = argv.jsontrace;
+  runnerArgs.debug = argv.debug; // for BlockchainTests
 
   // for GeneralStateTests
-  runnerArgs.data = argv.data
-  runnerArgs.gasLimit = argv.gas
-  runnerArgs.value = argv.value
+  runnerArgs.data = argv.data;
+  runnerArgs.gasLimit = argv.gas;
+  runnerArgs.value = argv.value;
 
   // runnerArgs.vmtrace = true; // for VMTests
 
   if (argv.customStateTest) {
-    const stateTestRunner = require('./GeneralStateTestsRunner.js')
-    let fileName = argv.customStateTest
-    tape(name, t => {
+    const stateTestRunner = require("./GeneralStateTestsRunner.js");
+    const fileName = argv.customStateTest;
+
+    tape(name, (t) => {
       testing.getTestFromSource(fileName, (err, test) => {
         if (err) {
-          return t.fail(err)
+          return t.fail(err);
         }
 
-        t.comment(`file: ${fileName} test: ${test.testName}`)
+        t.comment(`file: ${fileName} test: ${test.testName}`);
         stateTestRunner(runnerArgs, test, t, () => {
-          t.end()
-        })
-      })
-    })
+          t.end();
+        });
+      });
+    });
   } else {
-    tape(name, t => {
-      const runner = require(`./${name}Runner.js`)
+    tape(name, (t) => {
+      const runner = require(`./${name}Runner.js`);
+
       testing.getTestsFromArgs(name, (fileName, testName, test) => {
         return new Promise((resolve, reject) => {
-          if (name === 'VMTests') {
+          if (name === "VMTests") {
             // suppress some output of VMTests
             // t.comment(`file: ${fileName} test: ${testName}`)
-            test.fileName = fileName
-            test.testName = testName
-            runner(runnerArgs, test, t, resolve)
+            test.fileName = fileName;
+            test.testName = testName;
+            runner(runnerArgs, test, t, resolve);
           } else {
-            let runSkipped = testGetterArgs.runSkipped
-            let inRunSkipped = runSkipped.includes(fileName)
+            const runSkipped = testGetterArgs.runSkipped;
+            const inRunSkipped = runSkipped.includes(fileName);
+
             if (runSkipped.length === 0 || inRunSkipped) {
-              t.comment(`file: ${fileName} test: ${testName}`)
-              runner(runnerArgs, test, t, resolve)
+              t.comment(`file: ${fileName} test: ${testName}`);
+              runner(runnerArgs, test, t, resolve);
             } else {
-              resolve()
+              resolve();
             }
           }
-        }).catch(err => console.log(err))
+        }).catch((err) => {
+          return console.log(err);
+        });
       }, testGetterArgs).then(() => {
-        t.end()
-      })
-    })
+        t.end();
+      });
+    });
   }
 }
 
 function runAll () {
-  require('./tester.js')
-  require('./cacheTest.js')
-  require('./genesishashes.js')
+  require("./tester.js");
+  require("./cacheTest.js");
+  require("./genesishashes.js");
   async.series([
     // runTests.bind(this, 'VMTests', {}), // VM tests disabled since we don't support Frontier gas costs
-    runTests.bind(this, 'GeneralStateTests', {}),
-    runTests.bind(this, 'BlockchainTests', {})
-  ])
+    runTests.bind(this, "GeneralStateTests", {}),
+    runTests.bind(this, "BlockchainTests", {})
+  ]);
 }

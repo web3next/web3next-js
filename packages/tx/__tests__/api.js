@@ -1,205 +1,198 @@
-const tape = require('tape')
-const utils = require('ethereumjs-util')
-const rlp = utils.rlp
-const Transaction = require('../index.js')
-const txFixtures = require('./txs.json')
-const txFixturesEip155 = require('./ttTransactionTestEip155VitaliksTests.json')
-tape('[Transaction]: Basic functions', function (t) {
-  var transactions = []
+const utils = require("ethereumjs-util");
 
-  t.test('should decode transactions', function (st) {
-    txFixtures.slice(0, 3).forEach(function (tx) {
-      var pt = new Transaction(tx.raw)
-      st.equal('0x' + pt.nonce.toString('hex'), tx.raw[0])
-      st.equal('0x' + pt.gasPrice.toString('hex'), tx.raw[1])
-      st.equal('0x' + pt.gasLimit.toString('hex'), tx.raw[2])
-      st.equal('0x' + pt.to.toString('hex'), tx.raw[3])
-      st.equal('0x' + pt.value.toString('hex'), tx.raw[4])
-      st.equal('0x' + pt.v.toString('hex'), tx.raw[6])
-      st.equal('0x' + pt.r.toString('hex'), tx.raw[7])
-      st.equal('0x' + pt.s.toString('hex'), tx.raw[8])
-      st.equal('0x' + pt.data.toString('hex'), tx.raw[5])
-      transactions.push(pt)
-    })
-    st.end()
-  })
+const rlp = utils.rlp;
+const Transaction = require("..");
+const txFixtures = require("./txs.json");
+const txFixturesEip155 = require("./ttTransactionTestEip155VitaliksTests.json");
 
-  t.test('should serialize', function (st) {
-    transactions.forEach(function (tx) {
-      st.deepEqual(tx.serialize(), rlp.encode(tx.raw))
-    })
-    st.end()
-  })
+describe("[Transaction]: Basic functions", () => {
+  const transactions = [];
 
-  t.test('should hash', function (st) {
-    var tx = new Transaction(txFixtures[2].raw)
-    st.deepEqual(tx.hash(), new Buffer('375a8983c9fc56d7cfd118254a80a8d7403d590a6c9e105532b67aca1efb97aa', 'hex'))
-    st.deepEqual(tx.hash(false), new Buffer('61e1ec33764304dddb55348e7883d4437426f44ab3ef65e6da1e025734c03ff0', 'hex'))
-    st.deepEqual(tx.hash(true), new Buffer('375a8983c9fc56d7cfd118254a80a8d7403d590a6c9e105532b67aca1efb97aa', 'hex'))
-    st.end()
-  })
+  test("should decode transactions", () => {
+    txFixtures.slice(0, 3).forEach((tx) => {
+      const pt = new Transaction(tx.raw);
 
-  t.test('should hash with defined chainId', function (st) {
-    var tx = new Transaction(txFixtures[3].raw)
-    st.equal(tx.hash().toString('hex'), '0f09dc98ea85b7872f4409131a790b91e7540953992886fc268b7ba5c96820e4')
-    st.equal(tx.hash(true).toString('hex'), '0f09dc98ea85b7872f4409131a790b91e7540953992886fc268b7ba5c96820e4')
-    st.equal(tx.hash(false).toString('hex'), 'f97c73fdca079da7652dbc61a46cd5aeef804008e057be3e712c43eac389aaf0')
-    st.end()
-  })
+      expect("0x" + pt.nonce.toString("hex")).toBe(tx.raw[0]);
+      expect("0x" + pt.gasPrice.toString("hex")).toBe(tx.raw[1]);
+      expect("0x" + pt.gasLimit.toString("hex")).toBe(tx.raw[2]);
+      expect("0x" + pt.to.toString("hex")).toBe(tx.raw[3]);
+      expect("0x" + pt.value.toString("hex")).toBe(tx.raw[4]);
+      expect("0x" + pt.v.toString("hex")).toBe(tx.raw[6]);
+      expect("0x" + pt.r.toString("hex")).toBe(tx.raw[7]);
+      expect("0x" + pt.s.toString("hex")).toBe(tx.raw[8]);
+      expect("0x" + pt.data.toString("hex")).toBe(tx.raw[5]);
+      transactions.push(pt);
+    });
+  });
 
-  t.test('should verify Signatures', function (st) {
-    transactions.forEach(function (tx) {
-      st.equals(tx.verifySignature(), true)
-    })
-    st.end()
-  })
+  test("should serialize", () => {
+    transactions.forEach((tx) => {
+      expect(tx.serialize()).toEqual(rlp.encode(tx.raw));
+    });
+  });
 
-  t.test('should not verify Signatures', function (st) {
-    transactions.forEach(function (tx) {
-      tx.s = utils.zeros(32)
-      st.equals(tx.verifySignature(), false)
-    })
-    st.end()
-  })
+  test("should hash", () => {
+    const tx = new Transaction(txFixtures[2].raw);
 
-  t.test('should give a string about not verifing Signatures', function (st) {
-    transactions.forEach(function (tx) {
-      st.equals(tx.validate(true).slice(0, 54), 'Invalid Signature gas limit is too low. Need at least ')
-    })
-    st.end()
-  })
+    expect(tx.hash()).toEqual(Buffer.from("375a8983c9fc56d7cfd118254a80a8d7403d590a6c9e105532b67aca1efb97aa", "hex"));
+    expect(tx.hash(false)).toEqual(Buffer.from("61e1ec33764304dddb55348e7883d4437426f44ab3ef65e6da1e025734c03ff0", "hex"));
+    expect(tx.hash(true)).toEqual(Buffer.from("375a8983c9fc56d7cfd118254a80a8d7403d590a6c9e105532b67aca1efb97aa", "hex"));
+  });
 
-  t.test('should validate', function (st) {
-    transactions.forEach(function (tx) {
-      st.equals(tx.validate(), false)
-    })
-    st.end()
-  })
+  test("should hash with defined chainId", () => {
+    const tx = new Transaction(txFixtures[3].raw);
 
-  t.test('should sign tx', function (st) {
-    transactions.forEach(function (tx, i) {
+    expect(tx.hash().toString("hex")).toBe("0f09dc98ea85b7872f4409131a790b91e7540953992886fc268b7ba5c96820e4");
+    expect(tx.hash(true).toString("hex")).toBe("0f09dc98ea85b7872f4409131a790b91e7540953992886fc268b7ba5c96820e4");
+    expect(tx.hash(false).toString("hex")).toBe("f97c73fdca079da7652dbc61a46cd5aeef804008e057be3e712c43eac389aaf0");
+  });
+
+  test("should verify Signatures", () => {
+    transactions.forEach((tx) => {
+      expect(tx.verifySignature()).toBe(true);
+    });
+  });
+
+  test("should not verify Signatures", () => {
+    transactions.forEach((tx) => {
+      tx.s = utils.zeros(32);
+      expect(tx.verifySignature()).toBe(false);
+    });
+  });
+
+  test("should give a string about not verifing Signatures", () => {
+    transactions.forEach((tx) => {
+      expect(tx.validate(true).slice(0, 54)).toBe("Invalid Signature gas limit is too low. Need at least ");
+    });
+  });
+
+  test("should validate", () => {
+    transactions.forEach((tx) => {
+      expect(tx.validate()).toBe(false);
+    });
+  });
+
+  test("should sign tx", () => {
+    transactions.forEach((tx, i) => {
       if (txFixtures[i].privateKey) {
-        var privKey = new Buffer(txFixtures[i].privateKey, 'hex')
-        tx.sign(privKey)
-      }
-    })
-    st.end()
-  })
+        const privKey = Buffer.from(txFixtures[i].privateKey, "hex");
 
-  t.test("should get sender's address after signing it", function (st) {
-    transactions.forEach(function (tx, i) {
+        tx.sign(privKey);
+      }
+    });
+  });
+
+  test("should get sender's address after signing it", () => {
+    transactions.forEach((tx, i) => {
       if (txFixtures[i].privateKey) {
-        st.equals(tx.getSenderAddress().toString('hex'), txFixtures[i].sendersAddress)
+        expect(tx.getSenderAddress().toString("hex")).toBe(txFixtures[i].sendersAddress);
       }
-    })
-    st.end()
-  })
+    });
+  });
 
-  t.test("should get sender's public key after signing it", function (st) {
-    transactions.forEach(function (tx, i) {
+  test("should get sender's public key after signing it", () => {
+    transactions.forEach((tx, i) => {
       if (txFixtures[i].privateKey) {
-        st.equals(tx.getSenderPublicKey().toString('hex'),
-          utils.privateToPublic(new Buffer(txFixtures[i].privateKey, 'hex')).toString('hex'))
+        expect(tx.getSenderPublicKey().toString("hex"))
+          .toBe(utils.privateToPublic(Buffer.from(txFixtures[i].privateKey, "hex")).toString("hex"));
       }
-    })
-    st.end()
-  })
+    });
+  });
 
-  t.test("should get sender's address after signing it (second call should be cached)", function (st) {
-    transactions.forEach(function (tx, i) {
+  test("should get sender's address after signing it (second call should be cached)", () => {
+    transactions.forEach((tx, i) => {
       if (txFixtures[i].privateKey) {
-        st.equals(tx.getSenderAddress().toString('hex'), txFixtures[i].sendersAddress)
-        st.equals(tx.getSenderAddress().toString('hex'), txFixtures[i].sendersAddress)
+        expect(tx.getSenderAddress().toString("hex")).toBe(txFixtures[i].sendersAddress);
+        expect(tx.getSenderAddress().toString("hex")).toBe(txFixtures[i].sendersAddress);
       }
-    })
-    st.end()
-  })
+    });
+  });
 
-  t.test('should verify signing it', function (st) {
-    transactions.forEach(function (tx, i) {
+  test("should verify signing it", () => {
+    transactions.forEach((tx, i) => {
       if (txFixtures[i].privateKey) {
-        st.equals(tx.verifySignature(), true)
+        expect(tx.verifySignature()).toBe(true);
       }
-    })
-    st.end()
-  })
+    });
+  });
 
-  t.test('should validate with string option', function (st) {
-    transactions.forEach(function (tx) {
-      tx.gasLimit = 30000
-      st.equals(tx.validate(true), '')
-    })
-    st.end()
-  })
+  test("should validate with string option", () => {
+    transactions.forEach((tx) => {
+      tx.gasLimit = 30000;
+      expect(tx.validate(true)).toBe("");
+    });
+  });
 
-  t.test('should round trip decode a tx', function (st) {
-    var tx = new Transaction()
-    tx.value = 5000
-    var s1 = tx.serialize().toString('hex')
-    var tx2 = new Transaction(s1)
-    var s2 = tx2.serialize().toString('hex')
-    st.equals(s1, s2)
-    st.end()
-  })
+  test("should round trip decode a tx", () => {
+    const tx = new Transaction();
 
-  t.test('should accept lesser r values', function (st) {
-    var tx = new Transaction()
-    tx.r = '0x0005'
-    st.equals(tx.r.toString('hex'), '05')
-    st.end()
-  })
+    tx.value = 5000;
+    const s1 = tx.serialize().toString("hex");
+    const tx2 = new Transaction(s1);
+    const s2 = tx2.serialize().toString("hex");
 
-  t.test('should return data fee', function (st) {
-    var tx = new Transaction()
-    st.equals(tx.getDataFee().toNumber(), 0)
+    expect(s1).toBe(s2);
+  });
 
-    tx = new Transaction(txFixtures[2].raw)
-    st.equals(tx.getDataFee().toNumber(), 2496)
+  test("should accept lesser r values", () => {
+    const tx = new Transaction();
 
-    st.end()
-  })
+    tx.r = "0x0005";
+    expect(tx.r.toString("hex")).toBe("05");
+  });
 
-  t.test('should return base fee', function (st) {
-    var tx = new Transaction()
-    st.equals(tx.getBaseFee().toNumber(), 53000)
-    st.end()
-  })
+  test("should return data fee", () => {
+    let tx = new Transaction();
 
-  t.test('should return upfront cost', function (st) {
-    var tx = new Transaction({
+    expect(tx.getDataFee().toNumber()).toBe(0);
+
+    tx = new Transaction(txFixtures[2].raw);
+    expect(tx.getDataFee().toNumber()).toBe(2496);
+  });
+
+  test("should return base fee", () => {
+    const tx = new Transaction();
+
+    expect(tx.getBaseFee().toNumber()).toBe(53000);
+  });
+
+  test("should return upfront cost", () => {
+    const tx = new Transaction({
       gasPrice: 1000,
       gasLimit: 10000000,
       value: 42
-    })
-    st.equals(tx.getUpfrontCost().toNumber(), 10000000042)
-    st.end()
-  })
+    });
 
-  t.test('Verify EIP155 Signature based on Vitalik\'s tests', function (st) {
-    txFixturesEip155.forEach(function (tx) {
-      var pt = new Transaction(tx.rlp)
-      st.equal(pt.hash(false).toString('hex'), tx.hash)
-      st.equal('0x' + pt.serialize().toString('hex'), tx.rlp)
-      st.equal(pt.getSenderAddress().toString('hex'), tx.sender)
-    })
-    st.end()
-  })
+    expect(tx.getUpfrontCost().toNumber()).toBe(10000000042);
+  });
 
-  t.test('sign tx with chainId specified in params', function (st) {
-    var tx = new Transaction({ chainId: 42 })
-    st.equal(tx.getChainId(), 42)
-    var privKey = new Buffer(txFixtures[0].privateKey, 'hex')
-    tx.sign(privKey)
-    var serialized = tx.serialize()
-    var reTx = new Transaction(serialized)
-    st.equal(reTx.verifySignature(), true)
-    st.equal(reTx.getChainId(), 42)
-    st.end()
-  })
+  test("Verify EIP155 Signature based on Vitalik's tests", () => {
+    txFixturesEip155.forEach((tx) => {
+      const pt = new Transaction(tx.rlp);
 
-  t.test('allow chainId more than 1 byte', function (st) {
-    var tx = new Transaction({ chainId: 0x16b2 })
-    st.equal(tx.getChainId(), 0x16b2)
-    st.end()
-  })
-})
+      expect(pt.hash(false).toString("hex")).toBe(tx.hash);
+      expect("0x" + pt.serialize().toString("hex")).toBe(tx.rlp);
+      expect(pt.getSenderAddress().toString("hex")).toBe(tx.sender);
+    });
+  });
+
+  test("sign tx with chainId specified in params", () => {
+    const tx = new Transaction({chainId: 42});
+
+    expect(tx.getChainId()).toBe(42);
+    const privKey = Buffer.from(txFixtures[0].privateKey, "hex");
+
+    tx.sign(privKey);
+    const serialized = tx.serialize();
+    const reTx = new Transaction(serialized);
+
+    expect(reTx.verifySignature()).toBe(true);
+    expect(reTx.getChainId()).toBe(42);
+  });
+
+  test("allow chainId more than 1 byte", () => {
+    const tx = new Transaction({chainId: 0x16B2});
+
+    expect(tx.getChainId()).toBe(0x16B2);
+  });
+});

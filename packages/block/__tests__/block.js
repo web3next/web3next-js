@@ -1,91 +1,101 @@
-const tape = require('tape')
-const Common = require('ethereumjs-common')
-const testing = require('ethereumjs-testing')
-const rlp = require('ethereumjs-util').rlp
-const Block = require('../index.js')
+const Common = require("ethereumjs-common");
+const testing = require("ethereumjs-testing");
+const rlp = require("ethereumjs-util").rlp;
+const Block = require("..");
+const testData = require("./testdata.json");
+const testData2 = require("./testdata2.json");
 
-tape('[Block]: block functions', function (t) {
-  t.test('should test block initialization', function (st) {
-    const block1 = new Block(null, { 'chain': 'ropsten' })
-    const common = new Common('ropsten')
-    const block2 = new Block(null, { 'common': common })
-    block1.setGenesisParams()
-    block2.setGenesisParams()
-    st.strictEqual(block1.hash().toString('hex'), block2.hash().toString('hex'), 'block hashes match')
+describe("[Block]: block functions", () => {
+  test("should test block initialization", () => {
+    const block1 = new Block(null, {chain: "ropsten"});
+    const common = new Common("ropsten");
+    const block2 = new Block(null, {common});
 
-    st.throws(function () { new Block(null, { 'chain': 'ropsten', 'common': common }) }, /not allowed!$/, 'should throw on initialization with chain and common parameter') // eslint-disable-line
-    st.end()
-  })
+    block1.setGenesisParams();
+    block2.setGenesisParams();
 
-  const testData = require('./testdata.json')
+    //  block hashes match
+    expect(block1.hash().toString("hex")).toStrictEqual(block2.hash().toString("hex"));
 
-  function testTransactionValidation (st, block) {
-    st.equal(block.validateTransactions(), true)
+    // should throw on initialization with chain and common parameter
+    expect(() => {
+      new Block(null, {chain: "ropsten",
+        common});
+    }).toThrow();
+  });
 
-    block.genTxTrie(function () {
-      st.equal(block.validateTransactionsTrie(), true)
-      st.end()
-    })
-  }
+  const testTransactionValidation = (block) => {
+    expect(block.validateTransactions()).toBe(true);
 
-  t.test('should test transaction validation', function (st) {
-    var block = new Block(rlp.decode(testData.blocks[0].rlp))
-    st.plan(2)
-    testTransactionValidation(st, block)
-  })
+    block.genTxTrie(() => {
+      expect(block.validateTransactionsTrie()).toBe(true);
+    });
+  };
 
-  t.test('should test transaction validation with empty transaction list', function (st) {
-    var block = new Block()
-    st.plan(2)
-    testTransactionValidation(st, block)
-  })
+  test("should test transaction validation", () => {
+    const block = new Block(rlp.decode(testData.blocks[0].rlp));
 
-  const testData2 = require('./testdata2.json')
-  t.test('should test uncles hash validation', function (st) {
-    var block = new Block(rlp.decode(testData2.blocks[2].rlp))
-    st.equal(block.validateUnclesHash(), true)
-    st.end()
-  })
+    testTransactionValidation(block);
+  });
 
-  t.test('should test isGenesis (mainnet default)', function (st) {
-    var block = new Block()
-    st.notEqual(block.isGenesis(), true)
-    block.header.number = new Buffer([])
-    st.equal(block.isGenesis(), true)
-    st.end()
-  })
+  test("should test transaction validation with empty transaction list", () => {
+    const block = new Block();
 
-  t.test('should test isGenesis (ropsten)', function (st) {
-    var block = new Block(null, { 'chain': 'ropsten' })
-    st.notEqual(block.isGenesis(), true)
-    block.header.number = new Buffer([])
-    st.equal(block.isGenesis(), true)
-    st.end()
-  })
+    testTransactionValidation(block);
+  });
 
-  const testDataGenesis = testing.getSingleFile('BasicTests/genesishashestest.json')
-  t.test('should test genesis hashes (mainnet default)', function (st) {
-    var genesisBlock = new Block()
-    genesisBlock.setGenesisParams()
-    var rlp = genesisBlock.serialize()
-    st.strictEqual(rlp.toString('hex'), testDataGenesis.genesis_rlp_hex, 'rlp hex match')
-    st.strictEqual(genesisBlock.hash().toString('hex'), testDataGenesis.genesis_hash, 'genesis hash match')
-    st.end()
-  })
+  test("should test uncles hash validation", () => {
+    const block = new Block(rlp.decode(testData2.blocks[2].rlp));
 
-  t.test('should test genesis parameters (ropsten)', function (st) {
-    var genesisBlock = new Block(null, { 'chain': 'ropsten' })
-    genesisBlock.setGenesisParams()
-    let ropstenStateRoot = '217b0bbcfb72e2d57e28f33cb361b9983513177755dc3f33ce3e7022ed62b77b'
-    st.strictEqual(genesisBlock.header.stateRoot.toString('hex'), ropstenStateRoot, 'genesis stateRoot match')
-    st.end()
-  })
+    expect(block.validateUnclesHash()).toBe(true);
+  });
 
-  t.test('should test toJSON', function (st) {
-    var block = new Block(rlp.decode(testData2.blocks[2].rlp))
-    st.equal(typeof (block.toJSON()), 'object')
-    st.equal(typeof (block.toJSON(true)), 'object')
-    st.end()
-  })
-})
+  test("should test isGenesis (mainnet default)", () => {
+    const block = new Block();
+
+    expect(block.isGenesis()).not.toBe(true);
+    block.header.number = Buffer.from([]);
+    expect(block.isGenesis()).toBe(true);
+  });
+
+  test("should test isGenesis (ropsten)", () => {
+    const block = new Block(null, {chain: "ropsten"});
+
+    expect(block.isGenesis()).not.toBe(true);
+    block.header.number = Buffer.from([]);
+    expect(block.isGenesis()).toBe(true);
+  });
+
+  const testDataGenesis = testing.getSingleFile("BasicTests/genesishashestest.json");
+
+  test("should test genesis hashes (mainnet default)", () => {
+    const genesisBlock = new Block();
+
+    genesisBlock.setGenesisParams();
+    const rlp = genesisBlock.serialize();
+
+    // rlp hex match
+    expect(rlp.toString("hex")).toStrictEqual(testDataGenesis.genesis_rlp_hex);
+
+    // genesis hash match
+    expect(genesisBlock.hash().toString("hex")).toStrictEqual(testDataGenesis.genesis_hash);
+  });
+
+  test("should test genesis parameters (ropsten)", () => {
+    const genesisBlock = new Block(null, {chain: "ropsten"});
+
+    genesisBlock.setGenesisParams();
+    const ropstenStateRoot = "217b0bbcfb72e2d57e28f33cb361b9983513177755dc3f33ce3e7022ed62b77b";
+
+    // genesis stateRoot match
+    expect(genesisBlock.header.stateRoot.toString("hex")).toStrictEqual(ropstenStateRoot);
+  });
+
+  test("should test toJSON", () => {
+    const block = new Block(rlp.decode(testData2.blocks[2].rlp));
+
+    expect(typeof block.toJSON()).toBe("object");
+    expect(typeof block.toJSON(true)).toBe("object");
+  });
+});
 

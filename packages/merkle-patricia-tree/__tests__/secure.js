@@ -1,41 +1,28 @@
-const Trie = require('../secure.js')
-const async = require('async')
-const tape = require('tape')
-const jsonTests = require('ethereumjs-testing').tests.trieTests.trietest_secureTrie
+/* eslint-disable promise/prefer-await-to-callbacks, import/no-commonjs, import/unambiguous */
 
-var trie = new Trie()
+const jsonTests = require("ethereumjs-testing").tests.trieTests.trietest_secureTrie;
+const Trie = require("../secure.js").default;
 
-tape('secure tests', function (it) {
-  it.test('empty values', function (t) {
-    async.eachSeries(jsonTests.emptyValues.in, function (row, cb) {
-      trie.put(new Buffer(row[0]), row[1], cb)
-    }, function (err) {
-      t.equal('0x' + trie.root.toString('hex'), jsonTests.emptyValues.root)
-      t.end(err)
-    })
-  })
+const convert = (v) => {
+  if (v && v.startsWith("0x")) {
+    return Buffer.from(v.slice(2), "hex");
+  } else {
+    return v;
+  }
+};
+describe("secure tests", () => {
+  const testNames = Object.keys(jsonTests);
 
-  it.test('branchingTests', function (t) {
-    trie = new Trie()
-    async.eachSeries(jsonTests.branchingTests.in, function (row, cb) {
-      trie.put(row[0], row[1], cb)
-    }, function () {
-      t.equal('0x' + trie.root.toString('hex'), jsonTests.branchingTests.root)
-      t.end()
-    })
-  })
-
-  it.test('jeff', function (t) {
-    async.eachSeries(jsonTests.jeff.in, function (row, cb) {
-      var val = row[1]
-      if (val) {
-        val = new Buffer(row[1].slice(2), 'hex')
-      }
-
-      trie.put(new Buffer(row[0].slice(2), 'hex'), val, cb)
-    }, function () {
-      t.equal('0x' + trie.root.toString('hex'), jsonTests.jeff.root)
-      t.end()
-    })
-  })
-})
+  testNames.forEach((name) => {
+    test(name, async () => {
+      const inputs = jsonTests[name].in;
+      const expected = jsonTests[name].root;
+      const trie = new Trie();
+      const ps = inputs.map(([key, value]) => {
+        return trie.put(convert(key), convert(value));
+      });
+      await Promise.all(ps);
+      expect("0x" + trie.root.toString("hex")).toBe(expected);
+    });
+  });
+});

@@ -6,7 +6,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "istanbul test mocha -- --reporter spec",
+    "test": "jest",
     "webtest": "browserify test/max.js | testling -u"
   },
   "keywords": [
@@ -20,12 +20,16 @@
     "safe-buffer": "^5.1.1"
   },
   "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-jest": "^23.0.1",
     "bn.js": "^4.11.1",
     "coveralls": "^2.11.4",
     "ethereumjs-testing": "git+https://github.com/ethereumjs/ethereumjs-testing.git",
     "istanbul": "^0.4.2",
-    "mocha": "^2.3.4"
-      },
+    "jest": "^23.1.0",
+    "mocha": "^2.3.4",
+    "regenerator-runtime": "^0.11.1"
+  },
   "bin": {
     "rlp": "./bin/rlp"
   }

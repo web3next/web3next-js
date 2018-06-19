@@ -1,11 +1,11 @@
-'use strict'
-const BlockHeader = require('./header')
-const ethUtil = require('ethereumjs-util')
+const ethUtil = require("ethereumjs-util");
+const BlockHeader = require("./header");
 
-module.exports = blockHeaderFromRpc
+module.exports = blockHeaderFromRpc;
 
 /**
  * Creates a new block header object from Ethereum JSON RPC.
+ *
  * @param {Object} blockParams - Ethereum JSON RPC of block (eth_getBlockByNumber)
  */
 function blockHeaderFromRpc (blockParams) {
@@ -25,12 +25,12 @@ function blockHeaderFromRpc (blockParams) {
     extraData: blockParams.extraData,
     mixHash: blockParams.mixHash,
     nonce: blockParams.nonce
-  })
+  });
 
   // override hash incase something was missing
   blockHeader.hash = function () {
-    return ethUtil.toBuffer(blockParams.hash)
-  }
+    return ethUtil.toBuffer(blockParams.hash);
+  };
 
-  return blockHeader
+  return blockHeader;
 }

@@ -1,5 +1,5 @@
 const BN = require("bn.js");
-const ethUtils =require( "..");
+const ethUtils = require("..");
 
 describe("zeros function", () => {
   test("should produce lots of 0s", () => {

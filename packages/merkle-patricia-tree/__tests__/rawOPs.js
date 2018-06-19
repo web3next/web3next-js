@@ -1,71 +1,54 @@
-const Trie = require('../index.js')
-const tape = require('tape')
-const crypto = require('crypto')
+/* eslint-disable promise/prefer-await-to-callbacks, import/no-commonjs, import/unambiguous */
 
-tape('put & get raw functions', function (it) {
-  var trie = new Trie()
-  var key = crypto.randomBytes(32)
-  var val = crypto.randomBytes(32)
+const crypto = require("crypto");
+const Trie = require("../promisifiedCheckpointTrie").default;
 
-  it.test('putRaw', function (t) {
-    trie.putRaw(key, val, t.end)
-  })
+describe("put & get raw functions", () => {
+  const trie = new Trie();
+  const key = crypto.randomBytes(32);
+  const val = crypto.randomBytes(32);
 
-  it.test('getRaw', function (t) {
-    trie.getRaw(key, function (err, rVal) {
-      t.equal(val.toString('hex'), rVal.toString('hex'))
-      t.end(err)
-    })
-  })
+  test("getRaw", async () => {
+    await trie.putRaw(key, val);
+    const rVal = await trie.getRaw(key);
 
-  it.test('should checkpoint and get the rawVal', function (t) {
-    trie.checkpoint()
-    trie.getRaw(key, function (err, rVal) {
-      t.equal(val.toString('hex'), rVal.toString('hex'))
-      t.end(err)
-    })
-  })
+    expect(val.toString("hex")).toBe(rVal.toString("hex"));
+  });
 
-  var key2 = crypto.randomBytes(32)
-  var val2 = crypto.randomBytes(32)
-  it.test('should store while in a checkpoint', function (t) {
-    trie.putRaw(key2, val2, t.end)
-  })
+  test("should checkpoint and get the rawVal", async () => {
+    trie.checkpoint();
+    const rVal = await trie.getRaw(key);
 
-  it.test('should retrieve from a checkpoint', function (t) {
-    trie.getRaw(key2, function (err, rVal) {
-      t.equal(val2.toString('hex'), rVal.toString('hex'))
-      t.end(err)
-    })
-  })
+    expect(val.toString("hex")).toBe(rVal.toString("hex"));
+  });
 
-  it.test('should not retiev after revert', function (t) {
-    trie.revert(t.end)
-  })
+  const key2 = crypto.randomBytes(32);
+  const val2 = crypto.randomBytes(32);
 
-  it.test('should delete raw', function (t) {
-    trie.delRaw(val2, t.end)
-  })
+  test("should retrieve from a checkpoint", async () => {
+    await trie.putRaw(key2, val2);
+    const rVal = await trie.getRaw(key2);
 
-  it.test('should not get val after delete ', function (t) {
-    trie.getRaw(val2, function (err, val) {
-      t.notok(val)
-      t.end(err)
-    })
-  })
+    expect(val2.toString("hex")).toBe(rVal.toString("hex"));
+  });
 
-  var key3 = crypto.randomBytes(32)
-  var val3 = crypto.randomBytes(32)
+  test("should not get val after delete ", async () => {
+    await trie.revert();
+    await trie.delRaw(val2);
+    const deletedVal = await trie.getRaw(val2);
 
-  it.test('test commit behavoir', function (t) {
-    trie.checkpoint()
-    trie.putRaw(key3, val3, function () {
-      trie.commit(function () {
-        trie.getRaw(key3, function (err, val) {
-          t.equal(val.toString('hex'), val3.toString('hex'))
-          t.end(err)
-        })
-      })
-    })
-  })
-})
+    expect(deletedVal).not.toBeTruthy();
+  });
+
+  const key3 = crypto.randomBytes(32);
+  const val3 = crypto.randomBytes(32);
+
+  test("test commit behavoir", async () => {
+    trie.checkpoint();
+    await trie.putRaw(key3, val3);
+    await trie.commit();
+    const committedVal = await trie.getRaw(key3);
+
+    expect(committedVal.toString("hex")).toBe(val3.toString("hex"));
+  });
+});

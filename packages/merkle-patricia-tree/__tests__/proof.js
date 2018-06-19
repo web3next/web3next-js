@@ -1,173 +1,70 @@
-const Trie = require('../index.js')
-const async = require('async')
-const tape = require('tape')
+/* eslint-disable promise/prefer-await-to-callbacks, import/no-commonjs, import/unambiguous */
+const Trie = require("../promisifiedCheckpointTrie").default;
 
-tape('simple merkle proofs generation and verification', function (tester) {
-  var it = tester.test
-  it('create a merkle proof and verify it', function (t) {
-    var trie = new Trie()
+describe("simple merkle proofs generation and verification", () => {
+  test("create a merkle proof and verify it", async () => {
+    const trie = new Trie();
 
-    async.series([
-      function (cb) {
-        trie.put('key1aa', '0123456789012345678901234567890123456789xx', cb)
-      },
-      function (cb) {
-        trie.put('key2bb', 'aval2', cb)
-      },
-      function (cb) {
-        trie.put('key3cc', 'aval3', cb)
-      },
-      function (cb) {
-        Trie.prove(trie, 'key2bb', function (err, prove) {
-          if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'key2bb', prove, function (err, val) {
-            if (err) return cb(err)
-            t.equal(val.toString('utf8'), 'aval2')
-            cb()
-          })
-        })
-      },
-      function (cb) {
-        Trie.prove(trie, 'key1aa', function (err, prove) {
-          if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'key1aa', prove, function (err, val) {
-            if (err) return cb(err)
-            t.equal(val.toString('utf8'), '0123456789012345678901234567890123456789xx')
-            cb()
-          })
-        })
-      },
-      function (cb) {
-        Trie.prove(trie, 'key2bb', function (err, prove) {
-          if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'randomkey', prove, function (err, val) {
-            t.notEqual(err, null, 'Expected error: ' + err.message)
-            cb()
-          })
-        })
-      },
-      function (cb) {
-        Trie.prove(trie, 'key2bb', function (err, prove) {
-          if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'key2b', prove, function (err, val) {
-            t.notEqual(err, null, 'Expected error: ' + err.message)
-            cb()
-          })
-        })
-      },
-      function (cb) {
-        Trie.prove(trie, 'key2bb', function (err, prove) {
-          if (err) return cb(err)
-          prove.push(Buffer.from('123456'))
-          Trie.verifyProof(trie.root, 'key2b', prove, function (err, val) {
-            t.notEqual(err, null, 'Expected error: ' + err.message)
-            cb()
-          })
-        })
-      }
-    ], function (err) {
-      t.end(err)
-    })
-  })
+    await trie.put("key1aa", "0123456789012345678901234567890123456789xx");
+    await trie.put("key2bb", "aval2");
+    await trie.put("key3cc", "aval3");
+    await trie.put("key3cc", "aval3");
 
-  it('create a merkle proof and verify it with a single long key', function (t) {
-    var trie = new Trie()
+    const prove = await Trie.prove(trie, "key2bb");
+    const val = await Trie.verifyProof(trie.root, "key2bb", prove);
+    expect(val.toString("utf8")).toBe("aval2");
 
-    async.series([
-      function (cb) {
-        trie.put('key1aa', '0123456789012345678901234567890123456789xx', cb)
-      },
-      function (cb) {
-        Trie.prove(trie, 'key1aa', function (err, prove) {
-          if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'key1aa', prove, function (err, val) {
-            if (err) return cb(err)
-            t.equal(val.toString('utf8'), '0123456789012345678901234567890123456789xx')
-            cb()
-          })
-        })
-      }
-    ], function (err) {
-      t.end(err)
-    })
-  })
+    const prove2 = await Trie.prove(trie, "key1aa");
+    const val2 = await Trie.verifyProof(trie.root, "key1aa", prove2);
+    expect(val2.toString("utf8")).toBe("0123456789012345678901234567890123456789xx");
 
-  it('create a merkle proof and verify it with a single short key', function (t) {
-    var trie = new Trie()
+    const prove3 = await Trie.prove(trie, "key2bb");
+    expect(Trie.verifyProof(trie.root, "randomkey", prove3)).rejects.toBeTruthy();
 
-    async.series([
-      function (cb) {
-        trie.put('key1aa', '01234', cb)
-      },
-      function (cb) {
-        Trie.prove(trie, 'key1aa', function (err, prove) {
-          if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'key1aa', prove, function (err, val) {
-            if (err) return cb(err)
-            t.equal(val.toString('utf8'), '01234')
-            cb()
-          })
-        })
-      }
-    ], function (err) {
-      t.end(err)
-    })
-  })
+    const prove4 = await Trie.prove(trie, "key2bb");
+    expect(Trie.verifyProof(trie.root, "key2b", prove4)).rejects.toBeTruthy();
 
-  it('create a merkle proof and verify it whit keys in the midle', function (t) {
-    var trie = new Trie()
+    const prove5 = await Trie.prove(trie, "key2bb");
+    prove5.push(Buffer.from("123456"));
+    expect(Trie.verifyProof(trie.root, "key2b", prove5)).rejects.not.toBe(null);
+  });
 
-    async.series([
-      function (cb) {
-        trie.put('key1aa', '0123456789012345678901234567890123456789xxx', cb)
-      },
-      function (cb) {
-        trie.put('key1', '0123456789012345678901234567890123456789Very_Long', cb)
-      },
-      function (cb) {
-        trie.put('key2bb', 'aval3', cb)
-      },
-      function (cb) {
-        trie.put('key2', 'short', cb)
-      },
-      function (cb) {
-        trie.put('key3cc', 'aval3', cb)
-      },
-      function (cb) {
-        trie.put('key3', '1234567890123456789012345678901', cb)
-      },
-      function (cb) {
-        Trie.prove(trie, 'key1', function (err, prove) {
-          if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'key1', prove, function (err, val) {
-            if (err) return cb(err)
-            t.equal(val.toString('utf8'), '0123456789012345678901234567890123456789Very_Long')
-            cb()
-          })
-        })
-      },
-      function (cb) {
-        Trie.prove(trie, 'key2', function (err, prove) {
-          if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'key2', prove, function (err, val) {
-            if (err) return cb(err)
-            t.equal(val.toString('utf8'), 'short')
-            cb()
-          })
-        })
-      },
-      function (cb) {
-        Trie.prove(trie, 'key3', function (err, prove) {
-          if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'key3', prove, function (err, val) {
-            if (err) return cb(err)
-            t.equal(val.toString('utf8'), '1234567890123456789012345678901')
-            cb()
-          })
-        })
-      }
-    ], function (err) {
-      t.end(err)
-    })
-  })
-})
+  test("create a merkle proof and verify it with a single long key", async () => {
+    const trie = new Trie();
+    await trie.put("key1aa", "0123456789012345678901234567890123456789xx");
+    const prove = await Trie.prove(trie, "key1aa");
+    const val = await Trie.verifyProof(trie.root, "key1aa", prove);
+    expect(val.toString("utf8")).toBe("0123456789012345678901234567890123456789xx");
+  });
+
+  test("create a merkle proof and verify it with a single short key", async () => {
+    const trie = new Trie();
+    await trie.put("key1aa", "01234");
+    const prove = await Trie.prove(trie, "key1aa");
+    const val = await Trie.verifyProof(trie.root, "key1aa", prove);
+    expect(val.toString("utf8")).toBe("01234");
+  });
+
+  test("create a merkle proof and verify it whit keys in the midle", async () => {
+    const trie = new Trie();
+    await trie.put("key1aa", "0123456789012345678901234567890123456789xxx");
+    await trie.put("key1", "0123456789012345678901234567890123456789Very_Long");
+    await trie.put("key2bb", "aval3");
+    await trie.put("key2", "short");
+    await trie.put("key3cc", "aval3");
+    await trie.put("key3", "1234567890123456789012345678901");
+
+    const prove = await Trie.prove(trie, "key1");
+    const val = await Trie.verifyProof(trie.root, "key1", prove);
+    expect(val.toString("utf8")).toBe("0123456789012345678901234567890123456789Very_Long");
+
+    const prove2 = await Trie.prove(trie, "key2");
+    const val2 = await Trie.verifyProof(trie.root, "key2", prove2);
+    expect(val2.toString("utf8")).toBe("short");
+
+    const prove3 = await Trie.prove(trie, "key3");
+    const val3 = await Trie.verifyProof(trie.root, "key3", prove3);
+
+    expect(val3.toString("utf8")).toBe("1234567890123456789012345678901");
+  });
+});
