@@ -16,14 +16,6 @@ const num06 = require('./precompiled/06-ecadd.js')
 const num07 = require('./precompiled/07-ecmul.js')
 const num08 = require('./precompiled/08-ecpairing.js')
 
-module.exports = VM
-
-VM.deps = {
-  ethUtil: ethUtil,
-  Account: require('ethereumjs-account'),
-  Trie: require('merkle-patricia-tree'),
-  rlp: require('ethereumjs-util').rlp
-}
 
 /**
  * @constructor
@@ -34,7 +26,9 @@ VM.deps = {
  * @param {Boolean} [opts.activatePrecompiles] Create entries in the state tree for the precompiled contracts
  * @param {Boolean} [opts.allowUnlimitedContractSize] Allows unlimited contract sizes while debugging (default: false; ONLY use during debugging)
  */
-function VM (opts = {}) {
+class VM  extends AsyncEventEmitter {
+  constructor(opts = {}) {
+    super(opts);
   this.opts = opts
 
   if (opts.stateManager) {
@@ -69,13 +63,21 @@ function VM (opts = {}) {
       this.trie.put(new BN(i).toArrayLike(Buffer, 'be', 20), new Account().serialize())
     }
   }
+this.runCode = require('./runCode.js').bind(this)
 
-  AsyncEventEmitter.call(this)
+  }
+
 }
 
-util.inherits(VM, AsyncEventEmitter)
 
-VM.prototype.runCode = require('./runCode.js')
+VM.deps = {
+  ethUtil: ethUtil,
+  Account: require('ethereumjs-account'),
+  Trie: require('merkle-patricia-tree'),
+  rlp: require('ethereumjs-util').rlp
+}
+
+
 VM.prototype.runJIT = require('./runJit.js')
 VM.prototype.runBlock = require('./runBlock.js')
 VM.prototype.runTx = require('./runTx.js')
@@ -96,3 +98,5 @@ VM.prototype.loadCompiled = function (address, src, cb) {
 VM.prototype.populateCache = function (addresses, cb) {
   this.stateManager.warmCache(addresses, cb)
 }
+module.exports = VM
+

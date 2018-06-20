@@ -9,7 +9,7 @@ const testUtil = require("./util.js");
 
 const cacheDB = new Level("./.cachedb");
 
-module.exports = function runBlockchainTest (options, testData, t, cb) {
+module.exports = function runBlockchainTest (options, testData, cb) {
   const blockchainDB = new Level("", {
     db: require("memdown")
   });
@@ -51,9 +51,11 @@ module.exports = function runBlockchainTest (options, testData, t, cb) {
     function (done) {
       // create and add genesis block
       genesisBlock.header = new BlockHeader(formatBlockHeader(testData.genesisBlockHeader));
-      t.equal(state.root.toString("hex"), genesisBlock.header.stateRoot.toString("hex"), "correct pre stateRoot");
+      // correct pre stateRoot
+      expect(state.root.toString("hex")).toBe(genesisBlock.header.stateRoot.toString("hex"))
       if (testData.genesisRLP) {
-        t.equal(genesisBlock.serialize().toString("hex"), testData.genesisRLP.slice(2), "correct genesis RLP");
+        // correct genesis RLP
+        expect(genesisBlock.serialize().toString("hex")).toBe(testData.genesisRLP.slice(2)
       }
       blockchain.putGenesis(genesisBlock, (err) => {
         done(err);
@@ -97,7 +99,8 @@ module.exports = function runBlockchainTest (options, testData, t, cb) {
           // fix for BlockchainTests/GeneralStateTests/stRandom/*
           testData.lastblockhash = testData.lastblockhash.substr(2);
         }
-        t.equal(block.hash().toString("hex"), testData.lastblockhash, "last block hash");
+        // last block hash
+        expect(block.hash().toString("hex")).toBe(testData.lastblockhash)
 
         // if the test fails, then block.header is the preState because
         // vm.runBlock has a check that prevents the actual postState from being
@@ -119,7 +122,8 @@ module.exports = function runBlockchainTest (options, testData, t, cb) {
       }
     }
   ], () => {
-    t.equal(blockchain.meta.rawHead.toString("hex"), testData.lastblockhash, "correct header block");
+    // correct header block
+    expect(blockchain.meta.rawHead.toString("hex")).toBe(testData.lastblockhash);
     cb();
   });
 };

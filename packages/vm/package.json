@@ -25,6 +25,8 @@
   "dependencies": {
     "async": "^2.1.2",
     "async-eventemitter": "^0.2.2",
+    "debug": "^3.1.0",
+    "es6-promisify": "^6.0.0",
     "ethereum-common": "0.2.0",
     "ethereumjs-account": "^2.0.3",
     "ethereumjs-block": "~1.7.0",
@@ -34,6 +36,9 @@
     "merkle-patricia-tree": "^2.1.2",
     "rustbn.js": "~0.1.1",
     "safe-buffer": "^5.1.1"
+  },
+  "jest": {
+    "setTimeout": 50000
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

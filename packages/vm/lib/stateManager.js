@@ -41,6 +41,7 @@ proto.copy = function () {
 // gets the account from the cache, or triggers a lookup and stores
 // the result in the cache
 proto.getAccount = function (address, cb) {
+  console.log("get account", this.cache)
   this.cache.getOrLoad(address, cb)
 }
 

@@ -37,29 +37,24 @@ Cache.prototype.lookup = function (key) {
   }
 }
 
-Cache.prototype._lookupAccount = function (address, cb) {
-  var self = this
-  self._trie.get(address, function (err, raw) {
-    if (err) return cb(err)
-    var account = new Account(raw)
-    var exists = !!raw
-    account.exists = exists
-    cb(null, account, exists)
-  })
+Cache.prototype._lookupAccount = async function (address) {
+  console.log("lookup account");
+  const raw = await this._trie.get(address);
+  return new Account(raw);
 }
 
-Cache.prototype.getOrLoad = function (key, cb) {
-  var self = this
-  var account = this.lookup(key)
-  if (account) {
-    cb(null, account)
-  } else {
-    self._lookupAccount(key, function (err, account, exists) {
-      if (err) return cb(err)
-      self._update(key, account, false, exists)
-      cb(null, account)
-    })
+Cache.prototype.getOrLoad = async function (key) {
+  console.log("get or Load");
+  let account = this.lookup(key)
+  if(account) {
+  return Promise.resolve(account);
   }
+  
+    console.log("lookup");
+    account = await this._lookupAccount(key);
+    this._update(key, account, false, !!account);
+    return account
+  
 }
 
 Cache.prototype.warm = function (addresses, cb) {

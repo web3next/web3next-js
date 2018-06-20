@@ -20,7 +20,7 @@ const opFns = require('./opFns.js')
 const exceptions = require('./exceptions.js')
 const setImmediate = require('timers').setImmediate
 const BN = utils.BN
-
+const debug = require('debug')("vm:runCode");
 const ERROR = exceptions.ERROR
 const VmError = exceptions.VmError
 
@@ -39,11 +39,13 @@ const VmError = exceptions.VmError
  * @param cb {Function}
  */
 module.exports = function (opts, cb) {
+  console.log("runCode")
   var self = this
   var stateManager = self.stateManager
+  console.log("setup Blcok")
 
   var block = opts.block || new Block()
-
+  console.log("setup VM state")
   // VM internal state
   var runState = {
     stateManager: stateManager,
@@ -77,7 +79,6 @@ module.exports = function (opts, cb) {
     populateCache: opts.populateCache === undefined ? true : opts.populateCache,
     static: opts.static || false
   }
-
   // temporary - to be factored out
   runState._precompiled = self._precompiled
   runState._vm = self
@@ -89,13 +90,16 @@ module.exports = function (opts, cb) {
 
   // iterate through the given ops until something breaks or we hit STOP
   function runVm () {
+    console.log("run VM")
     async.whilst(vmIsActive, iterateVm, parseVmResults)
   }
 
   // ensure contract is loaded; only used if runCode is called directly
   function loadContract (cb) {
+    console.log(`load contract: ${runState.address}`)
     stateManager.getAccount(runState.address, function (err, account) {
       if (err) return cb(err)
+      console.log("contract loaded")
       runState.contract = account
       cb()
     })
@@ -139,6 +143,7 @@ module.exports = function (opts, cb) {
     }
 
     function runOp (cb) {
+      debug("run op")
       // check for invalid opcode
       if (opName === 'INVALID') {
         return cb(new VmError(ERROR.INVALID_OPCODE))
