@@ -22,10 +22,10 @@ class SecureTrie extends CheckpointTrie {
       return this.__del(sha3(key));
     };
     this.del = function (key) {
-      this.__del(sha3(key));
+      return this.__del(sha3(key));
     };
     this.get = function (key) {
-      this.__get(sha3(key));
+      return this.__get(sha3(key));
     };
   }
 }

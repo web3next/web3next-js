@@ -324,6 +324,7 @@ module.exports = {
     if (runState.static) {
       trap(ERROR.STATIC_STATE_CHANGE)
     }
+    console.log("SSTORE")
     var stateManager = runState.stateManager
     var address = runState.address
     key = key.toArrayLike(Buffer, 'be', 32)
@@ -334,9 +335,10 @@ module.exports = {
     } else {
       value = val.toArrayLike(Buffer, 'be')
     }
-
+    console.log("get contract storage")
     stateManager.getContractStorage(runState.address, key, function (err, found) {
       if (err) return cb(err)
+        console.log("got contract storage")
       try {
         if (value.length === 0 && !found.length) {
           subGas(runState, new BN(fees.sstoreResetGas.v))
@@ -352,7 +354,7 @@ module.exports = {
         cb(e.error)
         return
       }
-
+      console.log("put contract storage")
       stateManager.putContractStorage(address, key, value, function (err) {
         if (err) return cb(err)
         runState.contract = stateManager.cache.get(address)

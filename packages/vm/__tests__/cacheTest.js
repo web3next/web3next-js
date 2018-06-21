@@ -1,10 +1,12 @@
-const async = require("async");
-const Account = require("ethereumjs-account");
-const Transaction = require("ethereumjs-tx");
 import Trie from "@w3n/merkle-patricia-tree/promisifiedCheckpointTrie";
+import {promisify} from "es6-promisify";
+import rlp from "rlp";
+const async = require("async");
+const Account = require("@w3n/account");
+const Transaction = require("ethereumjs-tx");
 const ethUtil = require("ethereumjs-util");
-import { promisify } from 'es6-promisify';
 const VM = require("..");
+
 jest.setTimeout(20000);
 
 describe("test the cache api", () => {
@@ -24,44 +26,55 @@ describe("test the cache api", () => {
     };
 
     const vm = new VM(new Trie());
-      let account = new Account();
+    const account0 = new Account();
+    console.log(vm.trie.root)
 
-      account.balance = "0xf00000000000000001";
-      await vm.trie.put(Buffer.from(account1.address, "hex"), account.serialize());
+    account0.balance = "0xf00000000000000001";
+    await vm.trie.put(Buffer.from(account1.address, "hex"), account0.serialize());
 
-       account = new Account();
+    const account = new Account();
+    console.log(vm.trie.root)
+    const result = await promisify(vm.runCode)({
+      code: account2.code,
+      data: account2.code,
+      account,
+      gasLimit: 3141592,
+      address: account2.address,
+      caller: account1.address
+    });
 
-      const result = await promisify(vm.runCode)({
-        code: account2.code,
-        data: account2.code,
-        account,
-        gasLimit: 3141592,
-        address: account2.address,
-        caller: account1.address
-      })
-      console.log("get result")
-      await account.setCode(vm.trie, result.return);
-      await vm.trie.put(account2.address, account.serialize());
+    console.log(vm.trie.root, result.return);
+    await promisify(account.setCode)(vm.trie, result.return);
+    console.log(account.codeHash, account);
 
-      const tx = new Transaction({
-        gasLimit: 3141592,
-        gasPrice: 1,
-        data: account3.code
-      });
+    await vm.trie.put(account2.address, account.serialize());
 
-      tx.sign(account1.key);
-      console.log("sign tx")
-      await vm.runTx({ tx});
+    const tx = new Transaction({
+      gasLimit: 3141592,
+      gasPrice: 1,
+      data: account3.code
+    });
+
+    tx.sign(account1.key);
+    console.log("sign tx");
+    await vm.runTx({tx});
     const val = await vm.trie.get(account2.address);
+
+    console.log(rlp.decode(val));
     const a = new Account(val);
-    return new Promise((res) => {
+
+    console.log(a.codeHash, a.stateRoot, a.balance, a.nonce);
+    const raw = await vm.trie.getRaw(a.codeHash);
+
+    console.log(raw);
+
+    return new Promise((resolve) => {
       a.getCode(vm.trie, (err, v) => {
+        console.log(err, v);
         expect(err).toBeFalsy();
         expect(v.toString("hex")).toBe("60606040526008565b00");
         res();
       });
     });
-
-
   });
 });

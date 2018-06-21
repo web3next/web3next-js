@@ -147,7 +147,6 @@ Trie.prototype.del = function (key, cb) {
  */
 Trie.prototype.getRaw = function (key, cb) {
   key = ethUtil.toBuffer(key)
-
   function dbGet (db, cb2) {
     db.get(key, {
       keyEncoding: 'binary',
@@ -184,11 +183,11 @@ Trie.prototype._lookupNode = function (node, cb) {
 
 // TODO: remove the proxy method when changing the caching
 Trie.prototype._putRaw = function (key, val, cb) {
-  function dbPut (db, cb2) {
+   const dbPut =  (db, cb2) => {
     db.put(key, val, {
       keyEncoding: 'binary',
       valueEncoding: 'binary'
-    }, cb2)
+    },cb2())
   }
   async.each(this._putDBs, dbPut, cb)
 }

@@ -38,7 +38,6 @@ Cache.prototype.lookup = function (key) {
 }
 
 Cache.prototype._lookupAccount = async function (address) {
-  console.log("lookup account");
   const raw = await this._trie.get(address);
   return new Account(raw);
 }
@@ -47,13 +46,15 @@ Cache.prototype.getOrLoad = async function (key) {
   console.log("get or Load");
   let account = this.lookup(key)
   if(account) {
-  return Promise.resolve(account);
+    console.log("found")
+    return Promise.resolve(account);
   }
   
-    console.log("lookup");
-    account = await this._lookupAccount(key);
-    this._update(key, account, false, !!account);
-    return account
+  console.log("lookup");
+  account = await this._lookupAccount(key);
+  this._update(key, account, false, !!account);
+  console.log("updated", key)
+  return account
   
 }
 
@@ -85,7 +86,7 @@ Cache.prototype.flush = function (cb) {
     if (it.value && it.value.modified) {
       it.value.modified = false
       it.value.val = it.value.val.serialize()
-      self._trie.put(Buffer.from(it.key, 'hex'), it.value.val, function () {
+      self._trie.put(Buffer.from(it.key, 'hex'), it.value.val).then(function () {
         next = it.hasNext
         it.next()
         done()

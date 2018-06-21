@@ -19,7 +19,6 @@ var Account = module.exports = function (data) {
     length: 32,
     default: ethUtil.SHA3_NULL
   }]
-
   ethUtil.defineProperties(this, fields, data)
 }
 
@@ -32,25 +31,32 @@ Account.prototype.isContract = function () {
 }
 
 Account.prototype.getCode = function (state, cb) {
+  console.log("get code: ", this.codeHash)
   if (!this.isContract()) {
+    console.log("this account is not contract")
     cb(null, Buffer.alloc(0))
     return
   }
 
-  state.getRaw(this.codeHash, cb)
+  state.getRaw(this.codeHash).then((val) => {
+    console.log(val)
+    cb(val)
+  })
 }
 
 Account.prototype.setCode = function (trie, code, cb) {
   var self = this
 
   this.codeHash = ethUtil.sha3(code)
-
+  console.log(this.codeHash)
   if (this.codeHash.toString('hex') === ethUtil.SHA3_NULL_S) {
     cb(null, Buffer.alloc(0))
     return
   }
 
-  trie.putRaw(this.codeHash, code, function (err) {
+  console.log(trie.root, trie.putRaw)
+  trie.putRaw(this.codeHash, code).then(function (err) {
+    console.log("put", trie.root, err, code)
     cb(err, self.codeHash)
   })
 }

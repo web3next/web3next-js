@@ -97,21 +97,22 @@ module.exports = function (opts, cb) {
   // ensure contract is loaded; only used if runCode is called directly
   function loadContract (cb) {
     console.log(`load contract: ${runState.address}`)
-    stateManager.getAccount(runState.address, function (err, account) {
-      if (err) return cb(err)
-      console.log("contract loaded")
-      runState.contract = account
-      cb()
+    stateManager.getAccount(runState.address).then((account) => {
+    console.log("contract loaded")
+    runState.contract = account
+    cb()
     })
   }
 
   function vmIsActive () {
+    console.log("check if VM is active")
     var notAtEnd = runState.programCounter < runState.code.length
-
+    console.log(`notAtEnd: ${notAtEnd}, runState.stopped: ${runState.stopped}, runState.vmError: ${runState.vmError}, runState.returnValue: ${runState.returnValue}`)
     return !runState.stopped && notAtEnd && !runState.vmError && !runState.returnValue
   }
 
   function iterateVm (done) {
+    console.log("iterate vm")
     var opCode = runState.code[runState.programCounter]
     var opInfo = lookupOpInfo(opCode)
     var opName = opInfo.name
@@ -124,6 +125,7 @@ module.exports = function (opts, cb) {
       runStepHook,
       runOp
     ], function (err) {
+      console.log("finish this run op. ", err)
       setImmediate(done.bind(null, err))
     })
 
@@ -143,7 +145,7 @@ module.exports = function (opts, cb) {
     }
 
     function runOp (cb) {
-      debug("run op")
+      console.log("run op", opName)
       // check for invalid opcode
       if (opName === 'INVALID') {
         return cb(new VmError(ERROR.INVALID_OPCODE))
@@ -168,6 +170,7 @@ module.exports = function (opts, cb) {
         return
       }
 
+      console.log("prepare pc stack args")
       // advance program counter
       runState.programCounter++
       var argsNum = opInfo.in
@@ -177,9 +180,12 @@ module.exports = function (opts, cb) {
 
       args.reverse()
       args.push(runState)
+      console.log("create callback")
       // create a callback for async opFunc
       if (opInfo.async) {
+        console.log("push callback for async args")
         args.push(function (err, result) {
+          console.log("called  callback after opFn applied")
           if (err) return cb(err)
 
           // save result to the stack
@@ -201,6 +207,7 @@ module.exports = function (opts, cb) {
         })
       }
 
+      console.log("try to apply op")
       try {
         // run the opcode
         var result = opFn.apply(null, args)
@@ -209,13 +216,14 @@ module.exports = function (opts, cb) {
         return
       }
 
+      console.log("save to stack")
       // save result to the stack
       if (result !== undefined) {
         if (retNum !== 1) {
           // opcode post-stack mismatch
           return cb(VmError(ERROR.INTERNAL_ERROR))
         }
-
+        console.log("push the result to stack")
         runState.stack.push(result)
       } else {
         if (!opInfo.async && retNum !== 0) {
@@ -223,15 +231,18 @@ module.exports = function (opts, cb) {
           return cb(VmError(ERROR.INTERNAL_ERROR))
         }
       }
-
+      console.log("finish this iterate: ", opInfo)
       // call the callback if opFn was sync
       if (!opInfo.async) {
+      console.log("finish runOP. callback...")
         cb()
       }
+
     }
   }
 
   function parseVmResults (err) {
+    console.log("parse VM results")
     // remove any logs on error
     if (err) {
       runState.logs = []
@@ -250,20 +261,21 @@ module.exports = function (opts, cb) {
       'return': runState.returnValue ? runState.returnValue : Buffer.alloc(0)
     }
 
+    console.log("error check")
     if (results.exceptionError) {
       delete results.gasRefund
       delete results.selfdestruct
     }
-
     if (err && err.error !== ERROR.REVERT) {
       results.gasUsed = runState.gasLimit
     } else {
       results.gasUsed = runState.gasLimit.sub(runState.gasLeft)
     }
-
+    console.log("populate cache: ", runState.populateCache)
     if (runState.populateCache) {
       self.stateManager.cache.flush(function () {
         self.stateManager.cache.clear()
+        console.log(results)
         cb(err, results)
       })
     } else {

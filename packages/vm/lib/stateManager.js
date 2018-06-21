@@ -40,9 +40,8 @@ proto.copy = function () {
 
 // gets the account from the cache, or triggers a lookup and stores
 // the result in the cache
-proto.getAccount = function (address, cb) {
-  console.log("get account", this.cache)
-  this.cache.getOrLoad(address, cb)
+proto.getAccount = function (address) {
+  return this.cache.getOrLoad(address)
 }
 
 // checks if an account exists
@@ -53,15 +52,14 @@ proto.exists = function (address, cb) {
 }
 
 // saves the account
-proto.putAccount = function (address, account, cb) {
+proto.putAccount = async function (address, account) {
   var self = this
   // TODO: dont save newly created accounts that have no balance
   // if (toAccount.balance.toString('hex') === '00') {
   // if they have money or a non-zero nonce or code, then write to tree
-  self.cache.put(address, account)
-  self._touched.add(address.toString('hex'))
+  await self.cache.put(address, account)
+  await self._touched.add(address.toString('hex'))
   // self.trie.put(addressHex, account.serialize(), cb)
-  cb()
 }
 
 proto.getAccountBalance = function (address, cb) {
@@ -92,20 +90,12 @@ proto.putAccountBalance = function (address, balance, cb) {
 }
 
 // sets the contract code on the account
-proto.putContractCode = function (address, value, cb) {
+proto.putContractCode = async function (address, value) {
   var self = this
-  self.getAccount(address, function (err, account) {
-    if (err) {
-      return cb(err)
-    }
+  const account =  await self.getAccount(address);
     // TODO: setCode use trie.setRaw which creates a storage leak
-    account.setCode(self.trie, value, function (err) {
-      if (err) {
-        return cb(err)
-      }
-      self.putAccount(address, account, cb)
-    })
-  })
+  await account.setCode(self.trie, value);
+  await self.putAccount(address, account)
 }
 
 // given an account object, returns the code
@@ -120,39 +110,35 @@ proto.getContractCode = function (address, cb) {
 }
 
 // creates a storage trie from the primary storage trie
-proto._lookupStorageTrie = function (address, cb) {
+proto._lookupStorageTrie = async function (address) {
   var self = this
   // from state trie
-  self.getAccount(address, function (err, account) {
-    if (err) {
-      return cb(err)
-    }
-    var storageTrie = self.trie.copy()
-    storageTrie.root = account.stateRoot
-    storageTrie._checkpoints = []
-    cb(null, storageTrie)
-  })
+  const account = await self.getAccount(address)
+  var storageTrie = self.trie.copy()
+  storageTrie.root = account.stateRoot
+  storageTrie._checkpoints = []
+  return storageTrie;
 }
 
 // gets the storage trie from the storage cache or does lookup
-proto._getStorageTrie = function (address, cb) {
+proto._getStorageTrie = async function (address) {
   var self = this
   var storageTrie = self._storageTries[address.toString('hex')]
   // from storage cache
   if (storageTrie) {
-    return cb(null, storageTrie)
+    return Promise.resolve(storageTrie)
   }
   // lookup from state
-  self._lookupStorageTrie(address, cb)
+   return self._lookupStorageTrie(address)
 }
 
 proto.getContractStorage = function (address, key, cb) {
   var self = this
-  self._getStorageTrie(address, function (err, trie) {
-    if (err) {
-      return cb(err)
-    }
+  console.log("get contract Storage")
+  self._getStorageTrie(address).then(function ( trie) {
+    console.log("got cs")
     trie.get(key, function (err, value) {
+      console.log("got value: ", value)
       if (err) {
         return cb(err)
       }
@@ -164,28 +150,27 @@ proto.getContractStorage = function (address, key, cb) {
 
 proto.putContractStorage = function (address, key, value, cb) {
   var self = this
-  self._getStorageTrie(address, function (err, storageTrie) {
-    if (err) {
-      return cb(err)
-    }
+  self._getStorageTrie(address).then(function(storageTrie) {
+    console.log("getStorage trie")
 
     if (value && value.length) {
       // format input
       var encodedValue = rlp.encode(value)
-      storageTrie.put(key, encodedValue, finalize)
+      storageTrie.put(key, encodedValue).then(finalize)
     } else {
       // deleting a value
-      storageTrie.del(key, finalize)
+      storageTrie.del(key).then(finalize)
     }
 
     function finalize (err) {
+      console.log("finalize")
       if (err) return cb(err)
       // update storage cache
       self._storageTries[address.toString('hex')] = storageTrie
       // update contract stateRoot
       var contract = self.cache.get(address)
       contract.stateRoot = storageTrie.root
-      self.putAccount(address, contract, cb)
+      self.putAccount(address, contract).then(cb)
       self._touched.add(address.toString('hex'))
     }
   })
