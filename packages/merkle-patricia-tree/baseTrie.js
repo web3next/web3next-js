@@ -184,6 +184,7 @@ Trie.prototype._lookupNode = function (node, cb) {
 // TODO: remove the proxy method when changing the caching
 Trie.prototype._putRaw = function (key, val, cb) {
    const dbPut =  (db, cb2) => {
+    console.log("#### put raw ####", key, val);
     db.put(key, val, {
       keyEncoding: 'binary',
       valueEncoding: 'binary'

@@ -284,18 +284,21 @@ proto.hasGenesisState = async function () {
 }
 
 proto.generateCanonicalGenesis = async function () {
+  console.log("generate genesis");
   const genesis = await this.hasGenesisState();
   if (!genesis) {
-    await this.generateGenesis(common.genesisState)
+    console.log("genesis not found");
+    return this.generateGenesis(common.genesisState)
   } else {
-    Promise.reject(err);
+    return Promise.reject(err);
   }
 };
 
-proto.generateGenesis = function (initState) {
+proto.generateGenesis = async function (initState) {
   const addresses = Object.keys(initState)
   return addresses.reduce(async (p, address) => {
     await p
+
     const account = new Account()
     account.balance = new BN(initState[address]).toArrayLike(Buffer)
     address = Buffer.from(address, 'hex')

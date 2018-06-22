@@ -4,7 +4,6 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "prepublish": "npm run build",
     "test:browser": "karma start karma.conf.js",
     "test:node": "tape ./test/*.js",
     "build": "browserify --s Trie index.js > ./dist/trie.js",

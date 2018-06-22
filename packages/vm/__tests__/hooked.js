@@ -1,7 +1,10 @@
-const tape = require("tape");
+/* eslint-disable promise/prefer-await-to-callbacks, import/no-commonjs, import/unambiguous */
 const createHookedVm = require("../lib/hooked");
+const {promisify} = require("es6-promisify");
 
-tape("hooked-vm", (test) => {
+jest.setTimeout(20000);
+
+test("hooked-vm", async () => {
   const contractAddressHex = "0x1234000000000000000000000000000000001234";
   const contractAddress = Buffer.from(contractAddressHex.slice(2), "hex");
   const contractBalanceHex = "0xabcd00000000000000000000000000000000000000000000000000000000abcd";
@@ -39,20 +42,19 @@ tape("hooked-vm", (test) => {
   //   console.log(`${stepData.opcode.name} (${stepData.opcode.in})->(${stepData.opcode.out})`)
   // })
 
-  vm.runCode({
+  const results = await promisify(vm.runCode)({
     code: contractCode,
     address: contractAddress,
     gasLimit: Buffer.from("ffffffffff")
-  }, (err, results) => {
+  });
+
     // console.log(arguments)
 
-    test.ifError(err, "Should run code without error");
-    test.ifError(results.exceptionError, "Should run code without vm error");
+    // test.ifError(err, "Should run code without error");
+    // test.ifError(results.exceptionError, "Should run code without vm error");
 
-    test.equal("0x" + results.return.toString("hex"), contractBalanceHex, "Should return correct balance of contract");
-
-    test.end();
-  });
+    // Should return correct balance of contract
+  expect("0x" + results.return.toString("hex")).toBe(contractBalanceHex);
 });
 
 function hooksForBlockchainState (blockchainState) {

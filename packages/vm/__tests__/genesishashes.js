@@ -1,7 +1,7 @@
 const genesisData = require("ethereumjs-testing").getSingleFile("BasicTests/genesishashestest.json");
 const VM = require("..");
 const vm = new VM();
-jest.setTimeout(10000);
+jest.setTimeout(30000);
 
 describe("[Common]: genesis hashes tests", () => {
   test("should generate the genesis state correctly", async () => {

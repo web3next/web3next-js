@@ -48,22 +48,25 @@ function createHookedVm (opts, hooks) {
     cb(null, storageTrie)
   }
 
-  function loadAccount (address, cb) {
-    var addressHex = ethUtil.addHexPrefix(address.toString('hex'))
-    async.parallel({
-      nonce: hooks.fetchAccountNonce.bind(hooks, addressHex),
-      balance: hooks.fetchAccountBalance.bind(hooks, addressHex)
-    }, function (err, results) {
-      if (err) return cb(err)
+  async function loadAccount (address) {
+    const addressHex = ethUtil.addHexPrefix(address.toString('hex'))
+    return new Promise((resolve, reject) => {
+      async.parallel({
+        nonce: hooks.fetchAccountNonce.bind(hooks, addressHex),
+        balance: hooks.fetchAccountBalance.bind(hooks, addressHex)
+      }, (err, results) => {
+        if (err) return reject(err);
 
-      results._exists = results.nonce !== '0x0' || results.balance !== '0x0' || results._code !== '0x'
+        results._exists = results.nonce !== '0x0' || results.balance !== '0x0' || results._code !== '0x'
         // console.log('fetch account results:', results)
-      var account = new Account(results)
+        const account = new Account(results)
         // not used but needs to be anything but the default (ethUtil.SHA3_NULL)
         // code lookups are handled by `codeStore`
-      account.codeHash = ZERO_BUFFER.slice()
-      cb(null, account)
+        account.codeHash = ZERO_BUFFER.slice()
+        return resolve(account);
+      });
     })
+
   }
 }
 

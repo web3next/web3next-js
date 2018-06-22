@@ -1,8 +1,8 @@
 #!/usr/bin/env node
+/* eslint-disable promise/prefer-await-to-callbacks, import/no-commonjs, import/unambiguous */
 
 const argv = require("minimist")(process.argv.slice(2));
 const async = require("async");
-const tape = require("tape");
 const testing = require("ethereumjs-testing");
 
 const FORK_CONFIG = argv.fork || "Byzantium";
