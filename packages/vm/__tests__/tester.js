@@ -6,6 +6,7 @@ const async = require("async");
 const testing = require("ethereumjs-testing");
 
 const FORK_CONFIG = argv.fork || "Byzantium";
+jest.setTimeout(20000);
 
 // tests which should be fixed
 const skipBroken = [
@@ -112,52 +113,6 @@ const skipVM = [
   "randomTest643" // TODO fix this
 ];
 
-if (argv.r) {
-  randomized(argv.r, argv.v);
-} else if (argv.s) {
-  runTests("GeneralStateTests", argv);
-} else if (argv.v) {
-  runTests("VMTests", argv);
-} else if (argv.b) {
-  runTests("BlockchainTests", argv);
-} else if (argv.a) {
-  runAll();
-}
-
-// randomized tests
-// returns 1 if the tests fails
-// returns 0 if the tests succeds
-function randomized (stateTest) {
-  const stateRunner = require("./stateRunner.js");
-  let errored = false;
-
-  tape.createStream({
-    objectMode: true
-  }).on("data", (row) => {
-    if (row.ok === false && !errored) {
-      errored = true;
-      process.stdout.write("1");
-      process.exit();
-    }
-  }).on("end", () => {
-    process.stdout.write("0");
-  });
-
-  try {
-    stateTest = JSON.parse(stateTest);
-  } catch (e) {
-    console.error("invalid json");
-    process.exit();
-  }
-
-  const keys = Object.keys(stateTest);
-
-  stateTest = stateTest[keys[0]];
-
-  tape("", (t) => {
-    stateRunner({}, stateTest, t, t.end);
-  });
-}
 
 function getSkipTests (choices, defaultChoice) {
   let skipTests = [];
@@ -184,6 +139,7 @@ function getSkipTests (choices, defaultChoice) {
   return skipTests;
 }
 
+
 function runTests (name, runnerArgs, cb) {
   const testGetterArgs = {};
 
@@ -209,32 +165,34 @@ function runTests (name, runnerArgs, cb) {
   runnerArgs.value = argv.value;
 
   // runnerArgs.vmtrace = true; // for VMTests
+  const runner = require(`./runners/${name}Runner.js`);
 
-  if (argv.customStateTest) {
-    const stateTestRunner = require("./GeneralStateTestsRunner.js");
-    const fileName = argv.customStateTest;
+  console.log("runtest");
 
-    tape(name, (t) => {
-      testing.getTestFromSource(fileName, (err, test) => {
-        if (err) {
-          return t.fail(err);
-        }
-
-        t.comment(`file: ${fileName} test: ${test.testName}`);
-        stateTestRunner(runnerArgs, test, t, () => {
-          t.end();
+  describe(name, () => {
+    testing.getTestsFromArgs(name, (fileName, testName, testData) => {
+      const runSkipped = testGetterArgs.runSkipped;
+      const inRunSkipped = runSkipped.includes(fileName);
+      if (runSkipped.length === 0 || inRunSkipped) {
+        //console.log(`file: ${fileName} test: ${testName}`);
+        test(testName, () => {
+          runner(runnerArgs, testData);
         });
-      });
-    });
-  } else {
-    tape(name, (t) => {
-      const runner = require(`./${name}Runner.js`);
+      } 
+    })
+  });
+}
+runTests("GeneralStateTests", {})
 
-      testing.getTestsFromArgs(name, (fileName, testName, test) => {
+  test("t", () => {
+    expect(true).toBeTruthy();
+  });
+//runTests.bind(this, "BlockchainTests", {}),
+
+        /*
         return new Promise((resolve, reject) => {
           if (name === "VMTests") {
             // suppress some output of VMTests
-            // t.comment(`file: ${fileName} test: ${testName}`)
             test.fileName = fileName;
             test.testName = testName;
             runner(runnerArgs, test, t, resolve);
@@ -243,9 +201,10 @@ function runTests (name, runnerArgs, cb) {
             const inRunSkipped = runSkipped.includes(fileName);
 
             if (runSkipped.length === 0 || inRunSkipped) {
-              t.comment(`file: ${fileName} test: ${testName}`);
+              console.log(`file: ${fileName} test: ${testName}`);
               runner(runnerArgs, test, t, resolve);
             } else {
+
               resolve();
             }
           }
@@ -253,19 +212,20 @@ function runTests (name, runnerArgs, cb) {
           return console.log(err);
         });
       }, testGetterArgs).then(() => {
-        t.end();
+        cb();
       });
+      
     });
-  }
+  
 }
 
-function runAll () {
-  require("./tester.js");
-  require("./cacheTest.js");
-  require("./genesishashes.js");
+
+
+
   async.series([
     // runTests.bind(this, 'VMTests', {}), // VM tests disabled since we don't support Frontier gas costs
     runTests.bind(this, "GeneralStateTests", {}),
     runTests.bind(this, "BlockchainTests", {})
   ]);
-}
+*/
+//runAll()

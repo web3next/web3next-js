@@ -16,6 +16,7 @@ const num06 = require('./precompiled/06-ecadd.js')
 const num07 = require('./precompiled/07-ecmul.js')
 const num08 = require('./precompiled/08-ecpairing.js')
 
+const runCode = require('./runCode.js');
 
 /**
  * @constructor
@@ -29,44 +30,42 @@ const num08 = require('./precompiled/08-ecpairing.js')
 class VM  extends AsyncEventEmitter {
   constructor(opts = {}) {
     super(opts);
-  this.opts = opts
+    this.opts = opts
 
-  if (opts.stateManager) {
-    this.stateManager = opts.stateManager
-  } else {
-    this.stateManager = new StateManager({
-      trie: opts.state,
-      blockchain: opts.blockchain
-    })
-  }
-
-  this.allowUnlimitedContractSize = opts.allowUnlimitedContractSize === undefined ? false : opts.allowUnlimitedContractSize
-
-  // temporary
-  // this is here for a gradual transition to StateManager
-  this.blockchain = this.stateManager.blockchain
-  this.trie = this.stateManager.trie
-
-  // precompiled contracts
-  this._precompiled = {}
-  this._precompiled['0000000000000000000000000000000000000001'] = num01
-  this._precompiled['0000000000000000000000000000000000000002'] = num02
-  this._precompiled['0000000000000000000000000000000000000003'] = num03
-  this._precompiled['0000000000000000000000000000000000000004'] = num04
-  this._precompiled['0000000000000000000000000000000000000005'] = num05
-  this._precompiled['0000000000000000000000000000000000000006'] = num06
-  this._precompiled['0000000000000000000000000000000000000007'] = num07
-  this._precompiled['0000000000000000000000000000000000000008'] = num08
-
-  if (this.opts.activatePrecompiles) {
-    for (var i = 1; i <= 7; i++) {
-      this.trie.put(new BN(i).toArrayLike(Buffer, 'be', 20), new Account().serialize())
+    if (opts.stateManager) {
+      this.stateManager = opts.stateManager
+    } else {
+      this.stateManager = new StateManager({
+        trie: opts.state,
+        blockchain: opts.blockchain
+      })
     }
-  }
-this.runCode = require('./runCode.js').bind(this)
 
-  }
+    this.allowUnlimitedContractSize = opts.allowUnlimitedContractSize === undefined ? false : opts.allowUnlimitedContractSize
 
+    // temporary
+    // this is here for a gradual transition to StateManager
+    this.blockchain = this.stateManager.blockchain
+    this.trie = this.stateManager.trie
+
+    // precompiled contracts
+    this._precompiled = {}
+    this._precompiled['0000000000000000000000000000000000000001'] = num01
+    this._precompiled['0000000000000000000000000000000000000002'] = num02
+    this._precompiled['0000000000000000000000000000000000000003'] = num03
+    this._precompiled['0000000000000000000000000000000000000004'] = num04
+    this._precompiled['0000000000000000000000000000000000000005'] = num05
+    this._precompiled['0000000000000000000000000000000000000006'] = num06
+    this._precompiled['0000000000000000000000000000000000000007'] = num07
+    this._precompiled['0000000000000000000000000000000000000008'] = num08
+
+    if (this.opts.activatePrecompiles) {
+      for (var i = 1; i <= 7; i++) {
+        this.trie.put(new BN(i).toArrayLike(Buffer, 'be', 20), new Account().serialize())
+      }
+    }
+    this.runCode = runCode.bind(this)
+  }
 }
 
 
