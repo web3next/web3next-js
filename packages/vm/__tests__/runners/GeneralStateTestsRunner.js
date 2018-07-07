@@ -121,10 +121,11 @@ function runTestCase (options, testData, t, cb) {
 }
 
 module.exports = function runStateTest (options, testData) {
-  try {
+  //try {
 
     const testCases = parseTestCases(options.forkConfig, testData, options.data, options.gasLimit, options.value);
-console.log(testCases);
+    console.log(testCases);
+    return runTestCase(options, testCases[0]); 
 /*    async.eachSeries(
       testCases,
       (testCase, done) => {
@@ -132,9 +133,10 @@ console.log(testCases);
       },
       cb
     );
-    */
+    
   } catch (e) {
     console.log("error running test case for fork: " + options.forkConfig);
     console.log("error:", e);
   }
+  */
 };

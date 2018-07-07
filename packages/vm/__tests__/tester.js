@@ -176,7 +176,7 @@ function runTests (name, runnerArgs, cb) {
       if (runSkipped.length === 0 || inRunSkipped) {
         //console.log(`file: ${fileName} test: ${testName}`);
         test(testName, () => {
-          runner(runnerArgs, testData);
+          return runner(runnerArgs, testData);
         });
       } 
     })
@@ -184,9 +184,7 @@ function runTests (name, runnerArgs, cb) {
 }
 runTests("GeneralStateTests", {})
 
-  test("t", () => {
-    expect(true).toBeTruthy();
-  });
+
 //runTests.bind(this, "BlockchainTests", {}),
 
         /*
